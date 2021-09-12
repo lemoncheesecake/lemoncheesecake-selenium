@@ -4,7 +4,7 @@ from selenium.common.exceptions import WebDriverException, NoSuchElementExceptio
 from selenium.webdriver.remote.webelement import WebElement
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, require_that, assert_that
-from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
+from lemoncheesecake.matching.matcher import Matcher, MatchResult
 
 
 class HasElement(Matcher):
@@ -19,7 +19,7 @@ class HasElement(Matcher):
         try:
             element = actual.get_element()
         except NoSuchElementException as exc:
-            return MatchResult.failure(f"Could not find {actual!r}")
+            return MatchResult.failure(f"Could not find {actual}")
         return self.matcher.matches(element)
 
 
@@ -40,36 +40,36 @@ class Location:
             element = self.get_element()
             element.click()
         except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not click on {self!r}: {exc}")
-        lcc.log_info(f"Click on {self!r}")
+            raise lcc.AbortTest(f"Could not click on {self}: {exc}")
+        lcc.log_info(f"Click on {self}")
 
     def clear(self):
         try:
             element = self.get_element()
             element.clear()
         except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not clear {self!r}: {exc}")
-        lcc.log_info(f"Clear {self!r}")
+            raise lcc.AbortTest(f"Could not clear {self}: {exc}")
+        lcc.log_info(f"Clear {self}")
 
     def set_text(self, text: str):
         try:
             element = self.get_element()
             element.send_keys(text)
         except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not set text '{text}' on {self!r}: {exc}")
-        lcc.log_info(f"Set text '{text}' on {self!r}")
+            raise lcc.AbortTest(f"Could not set text '{text}' on {self}: {exc}")
+        lcc.log_info(f"Set text '{text}' on {self}")
 
     def check_element(self, *expectations):
         for expected in expectations:
-            check_that(repr(self), self, HasElement(expected))
+            check_that(str(self), self, HasElement(expected))
 
     def require_element(self, *expectations):
         for expected in expectations:
-            require_that(repr(self), self, HasElement(expected))
+            require_that(str(self), self, HasElement(expected))
 
     def assert_element(self, *expectations):
         for expected in expectations:
-            assert_that(repr(self), self, HasElement(expected))
+            assert_that(str(self), self, HasElement(expected))
 
-    def __repr__(self):
+    def __str__(self):
         return f"element identified by {self.by} '{self.value}'"
