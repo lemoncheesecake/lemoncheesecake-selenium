@@ -1,0 +1,12 @@
+*.pyc
+/.idea
+/report
+/reports
+/.coverage
+/.tox
+/doc/_build
+/htmlcov
+/lemoncheesecake_selenium.egg-info
+/dist
+/suites
+
