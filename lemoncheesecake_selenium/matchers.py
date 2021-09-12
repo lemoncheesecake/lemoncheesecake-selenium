@@ -51,3 +51,39 @@ def has_attribute(name, matcher=None):
         name,
         is_(matcher) if matcher else None
     )
+
+
+class IsDisplayed(Matcher):
+    def build_description(self, transformation):
+        return transformation("to be displayed")
+
+    def matches(self, actual: WebElement):
+        return MatchResult(actual.is_displayed())
+
+
+def is_displayed():
+    return IsDisplayed()
+
+
+class IsEnabled(Matcher):
+    def build_description(self, transformation):
+        return transformation("to be enabled")
+
+    def matches(self, actual: WebElement):
+        return MatchResult(actual.is_enabled())
+
+
+def is_enabled():
+    return IsEnabled()
+
+
+class IsSelected(Matcher):
+    def build_description(self, transformation):
+        return transformation("to be selected")
+
+    def matches(self, actual: WebElement):
+        return MatchResult(actual.is_selected())
+
+
+def is_selected():
+    return IsSelected()
