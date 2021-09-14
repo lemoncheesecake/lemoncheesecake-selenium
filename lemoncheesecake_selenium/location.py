@@ -71,5 +71,20 @@ class Location:
         for expected in expectations:
             assert_that(str(self), self, HasElement(expected))
 
+    def save_screenshot(self, description: str = None):
+        try:
+            element = self.get_element()
+        except WebDriverException as exc:
+            raise lcc.AbortTest(f"Could not find {self}: {exc}")
+
+        if description is None:
+            description = f"Screenshot of {self}"
+
+        with lcc.prepare_image_attachment("screenshot.png", description) as path:
+            try:
+                element.screenshot(path)
+            except WebDriverException as exc:
+                raise lcc.AbortTest(f"Could not take screenshot of {self}")
+
     def __str__(self):
         return f"element identified by {self.by} '{self.value}'"
