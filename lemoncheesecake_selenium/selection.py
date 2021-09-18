@@ -2,6 +2,7 @@ from typing import Sequence
 
 from selenium.common.exceptions import WebDriverException, NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support.ui import WebDriverWait
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, require_that, assert_that
 from lemoncheesecake.matching.matcher import Matcher, MatchResult
@@ -28,11 +29,48 @@ class Selection:
         self.driver = driver
         self.by = by
         self.value = value
+        self._expected_condition = None
+        self._expected_condition_timeout = 0
+        self._expected_condition_extra_args = ()
+        self._expected_condition_reverse = False
+
+    @property
+    def locator(self):
+        return self.by, self.value
+
+    def must_be_waited_until(self, expected_condition, timeout, extra_args=()):
+        self._expected_condition = expected_condition
+        self._expected_condition_timeout = timeout
+        self._expected_condition_extra_args = extra_args
+        self._expected_condition_reverse = False
+        return self
+
+    def must_be_waited_until_not(self, expected_condition, timeout, extra_args=()):
+        self._expected_condition = expected_condition
+        self._expected_condition_timeout = timeout
+        self._expected_condition_extra_args = extra_args
+        self._expected_condition_reverse = True
+        return self
+
+    def _wait_expected_condition(self):
+        if not self._expected_condition:
+            return
+
+        wait_method = getattr(
+            WebDriverWait(self.driver, self._expected_condition_timeout),
+            "until_not" if self._expected_condition_reverse else "until"
+        )
+        wait_method(
+            self._expected_condition(self.locator, *self._expected_condition_extra_args),
+            message="expected condition has not been fulfilled"
+        )
 
     def get_element(self) -> WebElement:
+        self._wait_expected_condition()
         return self.driver.find_element(self.by, self.value)
 
     def get_elements(self) -> Sequence[WebElement]:
+        self._wait_expected_condition()
         return self.driver.find_elements(self.by, self.value)
 
     def click(self):
