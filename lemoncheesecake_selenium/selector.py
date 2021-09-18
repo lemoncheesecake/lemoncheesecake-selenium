@@ -7,7 +7,7 @@ def _selector(by):
     def builder(locator, value):
         return Selection(locator.driver, by, value)
     builder.__doc__ = f"""
-    Get a location using element {by}
+    Get a :py:class:`Selection` using element's {by}
     
     :param value: a value related to ``by`` 
     :return: :py:class:`Location`
