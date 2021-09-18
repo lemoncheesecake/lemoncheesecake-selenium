@@ -15,7 +15,7 @@ class HasElement(Matcher):
     def build_description(self, transformation):
         return self.matcher.build_description(transformation)
 
-    def matches(self, actual: "Location"):
+    def matches(self, actual: "Selection"):
         try:
             element = actual.get_element()
         except NoSuchElementException as exc:
@@ -23,7 +23,7 @@ class HasElement(Matcher):
         return self.matcher.matches(element)
 
 
-class Location:
+class Selection:
     def __init__(self, driver, by, value):
         self.driver = driver
         self.by = by
