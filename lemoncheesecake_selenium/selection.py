@@ -44,19 +44,18 @@ class Selection:
     def locator(self):
         return self.by, self.value
 
-    def must_be_waited_until(self, expected_condition, timeout, extra_args=()):
+    def _must_be_waited(self, expected_condition, timeout, extra_args, reverse):
         self._expected_condition = expected_condition
-        self._expected_condition_timeout = timeout
+        self._expected_condition_timeout = timeout if timeout is not None else self.selector.timeout
         self._expected_condition_extra_args = extra_args
-        self._expected_condition_reverse = False
+        self._expected_condition_reverse = reverse
         return self
 
-    def must_be_waited_until_not(self, expected_condition, timeout, extra_args=()):
-        self._expected_condition = expected_condition
-        self._expected_condition_timeout = timeout
-        self._expected_condition_extra_args = extra_args
-        self._expected_condition_reverse = True
-        return self
+    def must_be_waited_until(self, expected_condition, timeout=None, extra_args=()):
+        return self._must_be_waited(expected_condition, timeout, extra_args, reverse=False)
+
+    def must_be_waited_until_not(self, expected_condition, timeout=None, extra_args=()):
+        return self._must_be_waited(expected_condition, timeout, extra_args, reverse=True)
 
     def _wait_expected_condition(self):
         if not self._expected_condition:
