@@ -1,11 +1,11 @@
 from selenium.webdriver.common.by import By
-
 from lemoncheesecake_selenium.selection import Selection
 
 
 def _selector(by):
-    def builder(locator, value):
-        return Selection(locator.driver, by, value)
+
+    def builder(selector, value):
+        return Selection(selector, by, value)
     builder.__doc__ = f"""
     Get a :py:class:`Selection` using element's {by}
     

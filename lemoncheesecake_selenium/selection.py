@@ -2,6 +2,7 @@ from typing import Sequence
 
 from selenium.common.exceptions import WebDriverException, NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, require_that, assert_that
@@ -25,14 +26,19 @@ class HasElement(Matcher):
 
 
 class Selection:
-    def __init__(self, driver, by, value):
-        self.driver = driver
+    def __init__(self, selector, by, value):
+        from .selector import Selector  # workaround for circular import
+        self.selector: Selector = selector
         self.by = by
         self.value = value
         self._expected_condition = None
         self._expected_condition_timeout = 0
         self._expected_condition_extra_args = ()
         self._expected_condition_reverse = False
+
+    @property
+    def driver(self) -> WebDriver:
+        return self.selector.driver
 
     @property
     def locator(self):
