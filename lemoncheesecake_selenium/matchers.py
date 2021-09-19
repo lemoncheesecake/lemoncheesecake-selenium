@@ -66,37 +66,25 @@ def has_property(name, matcher=None):
     )
 
 
-class IsDisplayed(Matcher):
+class StateMatcher(Matcher):
+    def __init__(self, name, func):
+        self.name = name
+        self.func = func
+
     def build_description(self, transformation):
-        return transformation("to be displayed")
+        return transformation(f"to be {self.name}")
 
     def matches(self, actual: WebElement):
-        return MatchResult(actual.is_displayed())
+        return MatchResult(self.func(actual))
 
 
 def is_displayed():
-    return IsDisplayed()
-
-
-class IsEnabled(Matcher):
-    def build_description(self, transformation):
-        return transformation("to be enabled")
-
-    def matches(self, actual: WebElement):
-        return MatchResult(actual.is_enabled())
+    return StateMatcher("displayed", lambda actual: actual.is_displayed())
 
 
 def is_enabled():
-    return IsEnabled()
-
-
-class IsSelected(Matcher):
-    def build_description(self, transformation):
-        return transformation("to be selected")
-
-    def matches(self, actual: WebElement):
-        return MatchResult(actual.is_selected())
+    return StateMatcher("enabled", lambda actual: actual.is_enabled())
 
 
 def is_selected():
-    return IsSelected()
+    return StateMatcher("selected", lambda actual: actual.is_selected())
