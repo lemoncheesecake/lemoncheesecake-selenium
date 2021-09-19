@@ -22,13 +22,15 @@ def has_text(expected):
     return HasText(is_(expected))
 
 
-class AttributeMatcher(Matcher):
-    def __init__(self, name, matcher):
+class EntityMatcher(Matcher):
+    def __init__(self, entity, name, func, matcher):
+        self.entity = entity
         self.name = name
+        self.func = func
         self.matcher = matcher
 
     def build_description(self, transformation):
-        description = transformation(f"to have attribute '{self.name}'")
+        description = transformation(f"to have {self.entity} '{self.name}'")
         if self.matcher:
             description += " that %s" % self.matcher.build_description(
                 MatcherDescriptionTransformer(conjugate=True)
@@ -36,9 +38,9 @@ class AttributeMatcher(Matcher):
         return description
 
     def matches(self, actual: WebElement):
-        value = actual.get_attribute(self.name)
+        value = self.func(actual)
         if value is None:
-            return MatchResult.failure(f"Element does not have attribute '{self.name}'")
+            return MatchResult.failure(f"Element does not have {self.entity} '{self.name}'")
 
         if self.matcher:
             return self.matcher.matches(value)
@@ -47,9 +49,20 @@ class AttributeMatcher(Matcher):
 
 
 def has_attribute(name, matcher=None):
-    return AttributeMatcher(
+    return EntityMatcher(
+        "attribute",
         name,
-        is_(matcher) if matcher else None
+        lambda actual: actual.get_attribute(name),
+        is_(matcher) if matcher is not None else None
+    )
+
+
+def has_property(name, matcher=None):
+    return EntityMatcher(
+        "property",
+        name,
+        lambda actual: actual.get_property(name),
+        is_(matcher) if matcher is not None else None
     )
 
 
