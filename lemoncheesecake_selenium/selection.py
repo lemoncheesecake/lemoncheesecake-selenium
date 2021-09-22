@@ -4,6 +4,7 @@ from selenium.common.exceptions import WebDriverException, NoSuchElementExceptio
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, require_that, assert_that
 from lemoncheesecake.matching.matcher import Matcher, MatchResult
@@ -127,4 +128,11 @@ class Selection:
                 raise lcc.AbortTest(f"Could not take screenshot of {self}")
 
     def __str__(self):
-        return f"element identified by {self.by} '{self.value}'"
+        if self.by == By.XPATH:
+            by = "XPATH"
+        elif self.by == By.CSS_SELECTOR:
+            by = "CSS selector"
+        else:
+            by = self.by
+
+        return f"element identified by {by} '{self.value}'"
