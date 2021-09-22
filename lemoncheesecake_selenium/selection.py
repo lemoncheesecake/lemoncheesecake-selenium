@@ -102,17 +102,14 @@ class Selection:
             raise lcc.AbortTest(f"Could not set text '{text}' on {self}: {exc}")
         lcc.log_info(f"Set text '{text}' on {self}")
 
-    def check_element(self, *expectations):
-        for expected in expectations:
-            check_that(str(self), self, HasElement(expected))
+    def check_element(self, expected):
+        check_that(str(self), self, HasElement(expected))
 
-    def require_element(self, *expectations):
-        for expected in expectations:
-            require_that(str(self), self, HasElement(expected))
+    def require_element(self, expected):
+        require_that(str(self), self, HasElement(expected))
 
-    def assert_element(self, *expectations):
-        for expected in expectations:
-            assert_that(str(self), self, HasElement(expected))
+    def assert_element(self, expected):
+        assert_that(str(self), self, HasElement(expected))
 
     def save_screenshot(self, description: str = None):
         try:
