@@ -29,5 +29,5 @@ class Selector:
     by_partial_link_text = _selector(By.PARTIAL_LINK_TEXT)
     by_name = _selector(By.NAME)
     by_tag_name = _selector(By.TAG_NAME)
-    by_class_name = _selector(By.TAG_NAME)
+    by_class_name = _selector(By.CLASS_NAME)
     by_css_selector = _selector(By.CSS_SELECTOR)
