@@ -4,6 +4,7 @@ from selenium.common.exceptions import WebDriverException, NoSuchElementExceptio
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, require_that, assert_that
@@ -75,6 +76,19 @@ class Selection:
         self._wait_expected_condition()
         return self.driver.find_element(self.by, self.value)
 
+    def get_element_or_abort(self) -> WebElement:
+        try:
+            return self.get_element()
+        except WebDriverException as exc:
+            raise lcc.AbortTest(f"Could not find {self}: {exc}")
+
+    def get_element_as_select_or_abort(self) -> Select:
+        element = self.get_element_or_abort()
+        try:
+            return Select(element)
+        except WebDriverException as exc:
+            raise lcc.AbortTest(f"Could not wrap a select from {self}: {exc}")
+
     def get_elements(self) -> Sequence[WebElement]:
         self._wait_expected_condition()
         return self.driver.find_elements(self.by, self.value)
@@ -126,6 +140,44 @@ class Selection:
                 element.screenshot(path)
             except WebDriverException as exc:
                 raise lcc.AbortTest(f"Could not take screenshot of {self}")
+
+    def _select(self, method_name, value=NotImplemented):
+        # Build contextual info for logs
+        action_label = method_name.replace("_", " ")
+        if value is not NotImplemented:
+            action_label += " " + repr(value)
+
+        select = self.get_element_as_select_or_abort()
+        try:
+            if value is NotImplemented:
+                getattr(select, method_name)()
+            else:
+                getattr(select, method_name)(value)
+        except WebDriverException as exc:
+            raise lcc.AbortTest(f"Could not {action_label} the {self}: {exc}")
+
+        lcc.log_info(f"{action_label} the {self}".capitalize())
+
+    def select_by_value(self, value):
+        self._select("select_by_value", value)
+
+    def select_by_index(self, index):
+        self._select("select_by_index", index)
+
+    def select_by_visible_text(self, text):
+        self._select("select_by_visible_text", text)
+
+    def deselect_all(self):
+        self._select("deselect_all")
+
+    def deselect_by_index(self, index):
+        self._select("deselect_by_index", index)
+
+    def deselect_by_value(self, value):
+        self._select("deselect_by_value", value)
+
+    def deselect_by_visible_text(self, text):
+        self._select("deselect_by_visible_text", text)
 
     def __str__(self):
         if self.by == By.XPATH:
