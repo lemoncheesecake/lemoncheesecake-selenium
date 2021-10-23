@@ -2,9 +2,6 @@ from selenium.webdriver.common.by import By
 from lemoncheesecake_selenium.selection import Selection
 
 
-DEFAULT_TIMEOUT = 10
-
-
 def _selector(by):
 
     def builder(selector, value):
@@ -19,9 +16,11 @@ def _selector(by):
 
 
 class Selector:
-    def __init__(self, driver, timeout=DEFAULT_TIMEOUT):
+    DEFAULT_TIMEOUT = 10
+
+    def __init__(self, driver, timeout=None):
         self.driver = driver
-        self.timeout = timeout
+        self.timeout = Selector.DEFAULT_TIMEOUT if timeout is None else timeout
 
     by_id = _selector(By.ID)
     by_xpath = _selector(By.XPATH)

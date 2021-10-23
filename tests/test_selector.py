@@ -36,3 +36,14 @@ def test_by(selector, name, expected):
 def test_timeout():
     selector = Selector(None, timeout=42)
     assert selector.timeout == 42
+
+
+def test_change_selector_class_default_timeout():
+    assert Selector(None).timeout == Selector.DEFAULT_TIMEOUT
+
+    orig_timeout = Selector.DEFAULT_TIMEOUT
+    try:
+        Selector.DEFAULT_TIMEOUT = 42
+        assert Selector(None).timeout == 42
+    finally:
+        Selector.DEFAULT_TIMEOUT = orig_timeout
