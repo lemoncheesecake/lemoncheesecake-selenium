@@ -95,7 +95,7 @@ class Selection:
 
     def click(self):
         try:
-            element = self.get_element()
+            element = self.get_element_or_abort()
             element.click()
         except WebDriverException as exc:
             raise lcc.AbortTest(f"Could not click on {self}: {exc}")
@@ -103,7 +103,7 @@ class Selection:
 
     def clear(self):
         try:
-            element = self.get_element()
+            element = self.get_element_or_abort()
             element.clear()
         except WebDriverException as exc:
             raise lcc.AbortTest(f"Could not clear {self}: {exc}")
@@ -111,7 +111,7 @@ class Selection:
 
     def set_text(self, text: str):
         try:
-            element = self.get_element()
+            element = self.get_element_or_abort()
             element.send_keys(text)
         except WebDriverException as exc:
             raise lcc.AbortTest(f"Could not set text '{text}' on {self}: {exc}")
@@ -128,7 +128,7 @@ class Selection:
 
     def save_screenshot(self, description: str = None):
         try:
-            element = self.get_element()
+            element = self.get_element_or_abort()
         except WebDriverException as exc:
             raise lcc.AbortTest(f"Could not find {self}: {exc}")
 
