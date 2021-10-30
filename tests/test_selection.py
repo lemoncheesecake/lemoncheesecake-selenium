@@ -183,7 +183,7 @@ class MyMatcher(Matcher):
         return self.result
 
 
-def test_check_element(log_check_mock):
+def test_check_element_success(log_check_mock):
     mock = MagicMock()
     mock.find_element.return_value = "dummy"
     selector = Selector(mock)
@@ -194,7 +194,7 @@ def test_check_element(log_check_mock):
     assert matcher.actual == "dummy"
 
 
-def test_check_element_failure(log_check_mock):
+def test_check_element_failure_match(log_check_mock):
     mock = MagicMock()
     mock.find_element.return_value = "dummy"
     selector = Selector(mock)
@@ -204,6 +204,22 @@ def test_check_element_failure(log_check_mock):
     log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, None)
     assert matcher.actual == "dummy"
 
+
+def test_check_element_failure_not_found(log_check_mock):
+    mock = MagicMock()
+    mock.find_element.side_effect = NoSuchElementException()
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    matcher = MyMatcher(result=MatchResult.failure())
+    selection.check_element(matcher)
+    log_check_mock.assert_called_with(
+        "Expect element identified by id 'value' to be here", False, callee.StartsWith("Could not find")
+    )
+
+
+# only perform basic tests on require_element & assert_element methods since they
+# are simple calls to their lemoncheesecake counterparts
+# the matcher wrapping system is already tested in depth the `test_check_element_*` tests
 
 def test_require_element(log_check_mock):
     mock = MagicMock()
@@ -216,18 +232,6 @@ def test_require_element(log_check_mock):
     assert matcher.actual == "dummy"
 
 
-def test_require_element_failure(log_check_mock):
-    mock = MagicMock()
-    mock.find_element.return_value = "dummy"
-    selector = Selector(mock)
-    selection = selector.by_id("value")
-    matcher = MyMatcher(result=MatchResult.failure())
-    with pytest.raises(lcc.AbortTest):
-        selection.require_element(matcher)
-    log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, None)
-    assert matcher.actual == "dummy"
-
-
 def test_assert_element(log_check_mock):
     mock = MagicMock()
     mock.find_element.return_value = "dummy"
@@ -236,16 +240,4 @@ def test_assert_element(log_check_mock):
     matcher = MyMatcher()
     selection.assert_element(matcher)
     log_check_mock.assert_not_called()
-    assert matcher.actual == "dummy"
-
-
-def test_assert_element_failure(log_check_mock):
-    mock = MagicMock()
-    mock.find_element.return_value = "dummy"
-    selector = Selector(mock)
-    selection = selector.by_id("value")
-    matcher = MyMatcher(result=MatchResult.failure())
-    with pytest.raises(lcc.AbortTest):
-        selection.assert_element(matcher)
-    log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, None)
     assert matcher.actual == "dummy"
