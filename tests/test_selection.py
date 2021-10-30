@@ -152,21 +152,24 @@ def _test_select_failure(method_name, args):
             getattr(selection, method_name)(*args)
 
 
-@pytest.mark.parametrize(
-    "method_name",
-    ("select_by_value", "select_by_index", "select_by_visible_text")
-)
-def test_select_failure(method_name):
-    _test_select_failure(method_name, ("arg",))
+def test_select_failure_select_raises():
+    mock = MagicMock()
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    with patch("lemoncheesecake_selenium.selection.Select") as select_mock:
+        select_mock.side_effect = WebDriverException("error")
+        with pytest.raises(lcc.AbortTest):
+            selection.select_by_index(1)
 
 
-@pytest.mark.parametrize(
-    "method_name,args",
-    (("deselect_all", ()),
-     ("deselect_by_value", ("opt",)), ("deselect_by_index", (1,)), ("deselect_by_visible_text", ("opt",)))
-)
-def test_deselect_failure(method_name, args):
-    _test_select_failure(method_name, args)
+def test_select_failure_select_by_raises():
+    mock = MagicMock()
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    with patch("lemoncheesecake_selenium.selection.Select") as select_mock:
+        select_mock.return_value.select_by_index.side_effect = WebDriverException("error")
+        with pytest.raises(lcc.AbortTest):
+            selection.select_by_index(1)
 
 
 class MyMatcher(Matcher):
