@@ -61,6 +61,25 @@ def test_get_elements():
     mock.find_elements.assert_called_with(By.ID, "value")
 
 
+@pytest.mark.parametrize(
+    "method_name,expected",
+    (
+        ("by_id", "element identified by id 'value'"),
+        ("by_xpath", "element identified by XPATH 'value'"),
+        ("by_link_text", "element identified by link text 'value'"),
+        ("by_partial_link_text", "element identified by partial link text 'value'"),
+        ("by_name", "element identified by name 'value'"),
+        ("by_tag_name", "element identified by tag name 'value'"),
+        ("by_class_name", "element identified by class name 'value'"),
+        ("by_css_selector", "element identified by CSS selector 'value'")
+    )
+)
+def test_str(method_name, expected):
+    selector = Selector(None)
+    selection = getattr(selector, method_name)("value")
+    assert str(selection) == expected
+
+
 def test_click(log_info_mock):
     mock = MagicMock()
     selector = Selector(mock)
