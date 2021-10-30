@@ -169,19 +169,21 @@ def test_deselect_failure(method_name, args):
     _test_select_failure(method_name, args)
 
 
+class MyMatcher(Matcher):
+    def __init__(self, result=MatchResult.success()):
+        super().__init__()
+        self.actual = None
+        self.result = result
+
+    def build_description(self, transformation):
+        return "to be here"
+
+    def matches(self, actual):
+        self.actual = actual
+        return self.result
+
+
 def test_check_element(log_check_mock):
-    class MyMatcher(Matcher):
-        def __init__(self):
-            super().__init__()
-            self.actual = None
-
-        def build_description(self, transformation):
-            return "to be here"
-
-        def matches(self, actual):
-            self.actual = actual
-            return MatchResult.success()
-
     mock = MagicMock()
     mock.find_element.return_value = "dummy"
     selector = Selector(mock)
@@ -189,4 +191,61 @@ def test_check_element(log_check_mock):
     matcher = MyMatcher()
     selection.check_element(matcher)
     log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", True, None)
+    assert matcher.actual == "dummy"
+
+
+def test_check_element_failure(log_check_mock):
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    matcher = MyMatcher(result=MatchResult.failure())
+    selection.check_element(matcher)
+    log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, None)
+    assert matcher.actual == "dummy"
+
+
+def test_require_element(log_check_mock):
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    matcher = MyMatcher()
+    selection.require_element(matcher)
+    log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", True, None)
+    assert matcher.actual == "dummy"
+
+
+def test_require_element_failure(log_check_mock):
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    matcher = MyMatcher(result=MatchResult.failure())
+    with pytest.raises(lcc.AbortTest):
+        selection.require_element(matcher)
+    log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, None)
+    assert matcher.actual == "dummy"
+
+
+def test_assert_element(log_check_mock):
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    matcher = MyMatcher()
+    selection.assert_element(matcher)
+    log_check_mock.assert_not_called()
+    assert matcher.actual == "dummy"
+
+
+def test_assert_element_failure(log_check_mock):
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    matcher = MyMatcher(result=MatchResult.failure())
+    with pytest.raises(lcc.AbortTest):
+        selection.assert_element(matcher)
+    log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, None)
     assert matcher.actual == "dummy"
