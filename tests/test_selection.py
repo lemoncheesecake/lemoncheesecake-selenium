@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import callee
 
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException, NoSuchElementException
+from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching.matcher import Matcher, MatchResult
 from lemoncheesecake_selenium import Selector, Selection
@@ -17,6 +17,11 @@ def log_info_mock(mocker):
 @pytest.fixture
 def log_check_mock(mocker):
     return mocker.patch("lemoncheesecake.matching.operations.log_check")
+
+
+@pytest.fixture
+def prepare_image_attachment_mock(mocker):
+    return mocker.patch("lemoncheesecake_selenium.selection.lcc.prepare_image_attachment")
 
 
 @pytest.fixture
@@ -263,3 +268,99 @@ def test_assert_element(log_check_mock):
     selection.assert_element(matcher)
     log_check_mock.assert_not_called()
     assert matcher.actual == "dummy"
+
+
+def test_with_must_be_waited_until():
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    selection.must_be_waited_until(lambda _: lambda _: True, timeout=0)
+    assert selection.get_element() == "dummy"
+
+
+def test_with_must_be_waited_until_extra_args():
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    selection.must_be_waited_until(lambda arg1, arg2: lambda arg: True, timeout=0, extra_args=("value",))
+    assert selection.get_element() == "dummy"
+
+
+def test_with_must_be_waited_until_failure():
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    selection.must_be_waited_until(lambda _: lambda _: False, timeout=0)
+    with pytest.raises(TimeoutException):
+        assert selection.get_element()
+
+
+def test_with_must_be_waited_until_not_success():
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock, timeout=0)
+    selection = selector.by_id("value")
+    selection.must_be_waited_until_not(lambda _: lambda _: False)
+    assert selection.get_element() == "dummy"
+
+
+def test_with_must_be_waited_until_not_extra_args():
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock, timeout=0)
+    selection = selector.by_id("value")
+    selection.must_be_waited_until_not(lambda arg1, arg2: lambda arg: False, extra_args=("value",))
+    assert selection.get_element() == "dummy"
+
+
+def test_with_must_be_waited_until_not_failure():
+    mock = MagicMock()
+    mock.find_element.return_value = "dummy"
+    selector = Selector(mock, timeout=0)
+    selection = selector.by_id("value")
+    selection.must_be_waited_until_not(lambda _: lambda _: True)
+    with pytest.raises(TimeoutException):
+        assert selection.get_element()
+
+
+def test_save_screenshot(prepare_image_attachment_mock):
+    mock = MagicMock()
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    selection.save_screenshot()
+    prepare_image_attachment_mock.assert_called_with(
+        "screenshot.png", "Screenshot of element identified by id 'value'"
+    )
+    mock.find_element.return_value.screenshot.assert_called_with(callee.Any())
+
+
+def test_save_screenshot_with_description(prepare_image_attachment_mock):
+    mock = MagicMock()
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    selection.save_screenshot("some description")
+    prepare_image_attachment_mock.assert_called_with(
+        "screenshot.png", "some description"
+    )
+    mock.find_element.return_value.screenshot.assert_called_with(callee.Any())
+
+
+def test_save_screenshot_exception_raised_by_find_element(prepare_image_attachment_mock):
+    mock = MagicMock()
+    mock.find_element.side_effect = NoSuchElementException()
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    with pytest.raises(lcc.AbortTest, match=r"^Could not find"):
+        selection.save_screenshot()
+
+
+def test_save_screenshot_exception_raised_by_screenshot(prepare_image_attachment_mock):
+    mock = MagicMock()
+    mock.find_element.return_value.screenshot.side_effect = WebDriverException()
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+    with pytest.raises(lcc.AbortTest, match=r"^Could not take screenshot"):
+        selection.save_screenshot()

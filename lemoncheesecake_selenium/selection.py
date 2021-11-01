@@ -127,10 +127,7 @@ class Selection:
         assert_that(str(self), self, HasElement(expected))
 
     def save_screenshot(self, description: str = None):
-        try:
-            element = self.get_element_or_abort()
-        except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not find {self}: {exc}")
+        element = self.get_element_or_abort()
 
         if description is None:
             description = f"Screenshot of {self}"
