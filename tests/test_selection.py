@@ -5,8 +5,10 @@ import callee
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching.matcher import Matcher, MatchResult
-from lemoncheesecake_selenium import Selector, Selection
+from lemoncheesecake.matching.matcher import MatchResult
+from lemoncheesecake_selenium import Selector
+
+from helpers import MyMatcher
 
 
 @pytest.fixture
@@ -194,20 +196,6 @@ def test_select_failure_select_by_raises():
         select_mock.return_value.select_by_index.side_effect = WebDriverException("error")
         with pytest.raises(lcc.AbortTest):
             selection.select_by_index(1)
-
-
-class MyMatcher(Matcher):
-    def __init__(self, result=MatchResult.success()):
-        super().__init__()
-        self.actual = None
-        self.result = result
-
-    def build_description(self, transformation):
-        return "to be here"
-
-    def matches(self, actual):
-        self.actual = actual
-        return self.result
 
 
 def test_check_element_success(log_check_mock):
