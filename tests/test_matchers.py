@@ -3,7 +3,8 @@ from unittest.mock import MagicMock
 import pytest
 from callee import Regex
 from lemoncheesecake.matching.matcher import MatchResult, MatcherDescriptionTransformer
-from lemoncheesecake_selenium import has_text, has_attribute, has_property
+from lemoncheesecake_selenium import has_text, has_attribute, has_property, \
+    is_displayed, is_enabled, is_selected
 
 from helpers import MyMatcher
 
@@ -95,3 +96,17 @@ def test_has_attribute_failure_with_matcher(matcher_func):
     matcher = matcher_func("foo", sub_matcher)
     result = matcher.matches(mock)
     assert not result and result is sub_matcher.result
+
+
+@pytest.mark.parametrize("matcher", (is_displayed, is_enabled, is_selected))
+class TestIsSomething:
+    def test_description(self, matcher):
+        expected = matcher.__name__.replace("is_", "to be ")
+        assert matcher().build_description(MatcherDescriptionTransformer()) == expected
+
+    @pytest.mark.parametrize("expected", (True, False))
+    def test_matches(self, matcher, expected):
+        mock = MagicMock()
+        mocked_method_name = matcher.__name__
+        getattr(mock, mocked_method_name).return_value = expected
+        assert bool(matcher().matches(mock)) is expected
