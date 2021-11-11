@@ -11,6 +11,9 @@ from lemoncheesecake_selenium import Selector
 from helpers import MyMatcher
 
 
+FAKE_WEB_ELEMENT = object()
+
+
 @pytest.fixture
 def log_info_mock(mocker):
     return mocker.patch("lemoncheesecake_selenium.selection.lcc.log_info")
@@ -31,39 +34,29 @@ def select_mock(mocker):
     return mocker.patch("lemoncheesecake_selenium.selection.Select")
 
 
-@pytest.mark.parametrize("method_name", ["get_element", "get_element_or_abort"])
-def test_get_element(method_name):
+def test_element():
     mock = MagicMock()
     selector = Selector(mock)
     selection = selector.by_id("value")
-    ret = getattr(selection, method_name)()
+    ret = selection.element
     assert isinstance(ret, MagicMock)
     mock.find_element.assert_called_with(By.ID, "value")
 
 
-def test_get_element_not_found():
+def test_element_not_found():
     mock = MagicMock()
     mock.find_element.side_effect = NoSuchElementException("value")
     selector = Selector(mock)
     selection = selector.by_id("value")
     with pytest.raises(NoSuchElementException):
-        selection.get_element()
+        selection.element  # noqa
 
 
-def test_get_element_or_abort_not_found(log_info_mock):
-    mock = MagicMock()
-    mock.find_element.side_effect = NoSuchElementException("value")
-    selector = Selector(mock)
-    selection = selector.by_id("value")
-    with pytest.raises(lcc.AbortTest):
-        selection.get_element_or_abort()
-
-
-def test_get_elements():
+def test_elements():
     mock = MagicMock()
     selector = Selector(mock)
     selection = selector.by_id("value")
-    ret = selection.get_elements()
+    ret = selection.elements
     assert isinstance(ret, MagicMock)
     mock.find_elements.assert_called_with(By.ID, "value")
 
@@ -101,7 +94,7 @@ def test_click_failure(log_info_mock):
     mock.find_element.return_value.click.side_effect = WebDriverException()
     selector = Selector(mock)
     selection = selector.by_id("value")
-    with pytest.raises(lcc.AbortTest):
+    with pytest.raises(WebDriverException):
         selection.click()
 
 
@@ -119,7 +112,7 @@ def test_set_text_failure(log_info_mock):
     mock.find_element.return_value.send_keys.side_effect = WebDriverException()
     selector = Selector(mock)
     selection = selector.by_id("value")
-    with pytest.raises(lcc.AbortTest):
+    with pytest.raises(WebDriverException):
         selection.set_text("content")
 
 
@@ -137,7 +130,7 @@ def test_clear_failure(log_info_mock):
     mock.find_element.return_value.clear.side_effect = WebDriverException()
     selector = Selector(mock)
     selection = selector.by_id("value")
-    with pytest.raises(lcc.AbortTest):
+    with pytest.raises(WebDriverException):
         selection.clear()
 
 
@@ -174,50 +167,50 @@ def _test_select_failure(method_name, args):
     selection = selector.by_id("value")
     with patch("lemoncheesecake_selenium.selection.Select") as select_mock:
         select_mock.side_effect = WebDriverException("error")
-        with pytest.raises(lcc.AbortTest):
+        with pytest.raises(WebDriverException):
             getattr(selection, method_name)(*args)
 
 
-def test_select_failure_select_raises():
+def test_select_failure_select_raises(log_info_mock):
     mock = MagicMock()
     selector = Selector(mock)
     selection = selector.by_id("value")
     with patch("lemoncheesecake_selenium.selection.Select") as select_mock:
         select_mock.side_effect = WebDriverException("error")
-        with pytest.raises(lcc.AbortTest):
+        with pytest.raises(WebDriverException):
             selection.select_by_index(1)
 
 
-def test_select_failure_select_by_raises():
+def test_select_failure_select_by_raises(log_info_mock):
     mock = MagicMock()
     selector = Selector(mock)
     selection = selector.by_id("value")
     with patch("lemoncheesecake_selenium.selection.Select") as select_mock:
         select_mock.return_value.select_by_index.side_effect = WebDriverException("error")
-        with pytest.raises(lcc.AbortTest):
+        with pytest.raises(WebDriverException):
             selection.select_by_index(1)
 
 
 def test_check_element_success(log_check_mock):
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock)
     selection = selector.by_id("value")
     matcher = MyMatcher()
     selection.check_element(matcher)
     log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", True, None)
-    assert matcher.actual == "dummy"
+    assert matcher.actual is FAKE_WEB_ELEMENT
 
 
 def test_check_element_failure_match(log_check_mock):
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock)
     selection = selector.by_id("value")
     matcher = MyMatcher(result=MatchResult.failure())
     selection.check_element(matcher)
     log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, None)
-    assert matcher.actual == "dummy"
+    assert matcher.actual is FAKE_WEB_ELEMENT
 
 
 def test_check_element_failure_not_found(log_check_mock):
@@ -238,80 +231,80 @@ def test_check_element_failure_not_found(log_check_mock):
 
 def test_require_element(log_check_mock):
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock)
     selection = selector.by_id("value")
     matcher = MyMatcher()
     selection.require_element(matcher)
     log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", True, None)
-    assert matcher.actual == "dummy"
+    assert matcher.actual is FAKE_WEB_ELEMENT
 
 
 def test_assert_element(log_check_mock):
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock)
     selection = selector.by_id("value")
     matcher = MyMatcher()
     selection.assert_element(matcher)
     log_check_mock.assert_not_called()
-    assert matcher.actual == "dummy"
+    assert matcher.actual is FAKE_WEB_ELEMENT
 
 
 def test_with_must_be_waited_until():
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock)
     selection = selector.by_id("value")
     selection.must_be_waited_until(lambda _: lambda _: True, timeout=0)
-    assert selection.get_element() == "dummy"
+    assert selection.element is FAKE_WEB_ELEMENT
 
 
 def test_with_must_be_waited_until_extra_args():
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock)
     selection = selector.by_id("value")
     selection.must_be_waited_until(lambda arg1, arg2: lambda arg: True, timeout=0, extra_args=("value",))
-    assert selection.get_element() == "dummy"
+    assert selection.element is FAKE_WEB_ELEMENT
 
 
 def test_with_must_be_waited_until_failure():
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock)
     selection = selector.by_id("value")
     selection.must_be_waited_until(lambda _: lambda _: False, timeout=0)
     with pytest.raises(TimeoutException):
-        assert selection.get_element()
+        assert selection.element
 
 
 def test_with_must_be_waited_until_not_success():
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock, timeout=0)
     selection = selector.by_id("value")
     selection.must_be_waited_until_not(lambda _: lambda _: False)
-    assert selection.get_element() == "dummy"
+    assert selection.element is FAKE_WEB_ELEMENT
 
 
 def test_with_must_be_waited_until_not_extra_args():
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock, timeout=0)
     selection = selector.by_id("value")
     selection.must_be_waited_until_not(lambda arg1, arg2: lambda arg: False, extra_args=("value",))
-    assert selection.get_element() == "dummy"
+    assert selection.element is FAKE_WEB_ELEMENT
 
 
 def test_with_must_be_waited_until_not_failure():
     mock = MagicMock()
-    mock.find_element.return_value = "dummy"
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock, timeout=0)
     selection = selector.by_id("value")
     selection.must_be_waited_until_not(lambda _: lambda _: True)
     with pytest.raises(TimeoutException):
-        assert selection.get_element()
+        assert selection.element
 
 
 def test_save_screenshot(prepare_image_attachment_mock):
@@ -341,7 +334,7 @@ def test_save_screenshot_exception_raised_by_find_element(prepare_image_attachme
     mock.find_element.side_effect = NoSuchElementException()
     selector = Selector(mock)
     selection = selector.by_id("value")
-    with pytest.raises(lcc.AbortTest, match=r"^Could not find"):
+    with pytest.raises(NoSuchElementException):
         selection.save_screenshot()
 
 
@@ -350,5 +343,5 @@ def test_save_screenshot_exception_raised_by_screenshot(prepare_image_attachment
     mock.find_element.return_value.screenshot.side_effect = WebDriverException()
     selector = Selector(mock)
     selection = selector.by_id("value")
-    with pytest.raises(lcc.AbortTest, match=r"^Could not take screenshot"):
+    with pytest.raises(WebDriverException):
         selection.save_screenshot()

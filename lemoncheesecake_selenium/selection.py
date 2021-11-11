@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from typing import Sequence
 
-from selenium.common.exceptions import WebDriverException, NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -19,9 +21,9 @@ class HasElement(Matcher):
     def build_description(self, transformation):
         return self.matcher.build_description(transformation)
 
-    def matches(self, actual: "Selection"):
+    def matches(self, actual: Selection):
         try:
-            element = actual.get_element()
+            element = actual.element
         except NoSuchElementException as exc:
             return MatchResult.failure(f"Could not find {actual}")
         return self.matcher.matches(element)
@@ -72,50 +74,27 @@ class Selection:
             message="expected condition has not been fulfilled"
         )
 
-    def get_element(self) -> WebElement:
+    @property
+    def element(self) -> WebElement:
         self._wait_expected_condition()
         return self.driver.find_element(self.by, self.value)
 
-    def get_element_or_abort(self) -> WebElement:
-        try:
-            return self.get_element()
-        except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not find {self}: {exc}")
-
-    def get_element_as_select_or_abort(self) -> Select:
-        element = self.get_element_or_abort()
-        try:
-            return Select(element)
-        except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not wrap a select from {self}: {exc}")
-
-    def get_elements(self) -> Sequence[WebElement]:
+    @property
+    def elements(self) -> Sequence[WebElement]:
         self._wait_expected_condition()
         return self.driver.find_elements(self.by, self.value)
 
     def click(self):
-        try:
-            element = self.get_element_or_abort()
-            element.click()
-        except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not click on {self}: {exc}")
         lcc.log_info(f"Click on {self}")
+        self.element.click()
 
     def clear(self):
-        try:
-            element = self.get_element_or_abort()
-            element.clear()
-        except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not clear {self}: {exc}")
         lcc.log_info(f"Clear {self}")
+        self.element.clear()
 
     def set_text(self, text: str):
-        try:
-            element = self.get_element_or_abort()
-            element.send_keys(text)
-        except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not set text '{text}' on {self}: {exc}")
         lcc.log_info(f"Set text '{text}' on {self}")
+        self.element.send_keys(text)
 
     def check_element(self, expected):
         check_that(str(self), self, HasElement(expected))
@@ -127,16 +106,11 @@ class Selection:
         assert_that(str(self), self, HasElement(expected))
 
     def save_screenshot(self, description: str = None):
-        element = self.get_element_or_abort()
-
         if description is None:
             description = f"Screenshot of {self}"
 
         with lcc.prepare_image_attachment("screenshot.png", description) as path:
-            try:
-                element.screenshot(path)
-            except WebDriverException as exc:
-                raise lcc.AbortTest(f"Could not take screenshot of {self}")
+            self.element.screenshot(path)
 
     def _select(self, method_name, value=NotImplemented):
         # Build contextual info for logs
@@ -144,16 +118,13 @@ class Selection:
         if value is not NotImplemented:
             action_label += " " + repr(value)
 
-        select = self.get_element_as_select_or_abort()
-        try:
-            if value is NotImplemented:
-                getattr(select, method_name)()
-            else:
-                getattr(select, method_name)(value)
-        except WebDriverException as exc:
-            raise lcc.AbortTest(f"Could not {action_label} the {self}: {exc}")
-
         lcc.log_info(f"{action_label} the {self}".capitalize())
+
+        select = Select(self.element)
+        if value is NotImplemented:
+            getattr(select, method_name)()
+        else:
+            getattr(select, method_name)(value)
 
     def select_by_value(self, value):
         self._select("select_by_value", value)
