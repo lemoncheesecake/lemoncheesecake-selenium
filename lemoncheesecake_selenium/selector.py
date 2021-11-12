@@ -18,12 +18,15 @@ def _selector(by):
 class Selector:
     DEFAULT_TIMEOUT = 10
     DEFAULT_SCREENSHOT_ON_EXCEPTION = False
+    DEFAULT_SCREENSHOT_ON_FAILED_CHECK = False
 
-    def __init__(self, driver, timeout=None, screenshot_on_exception=None):
+    def __init__(self, driver, *, timeout=None, screenshot_on_exception=None, screenshot_on_failed_check=None):
         self.driver = driver
         self.timeout = Selector.DEFAULT_TIMEOUT if timeout is None else timeout
         self.screenshot_on_exception = \
             Selector.DEFAULT_SCREENSHOT_ON_EXCEPTION if screenshot_on_exception is None else screenshot_on_exception
+        self.screenshot_on_failed_check = \
+            Selector.DEFAULT_SCREENSHOT_ON_FAILED_CHECK if screenshot_on_failed_check is None else screenshot_on_failed_check
 
     by_id = _selector(By.ID)
     by_xpath = _selector(By.XPATH)

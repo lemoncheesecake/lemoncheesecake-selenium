@@ -11,7 +11,7 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, require_that, assert_that
-from lemoncheesecake.matching.matcher import Matcher, MatchResult
+from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 
 from lemoncheesecake_selenium.utils import save_screenshot
 
@@ -24,12 +24,27 @@ class HasElement(Matcher):
     def build_description(self, transformation):
         return self.matcher.build_description(transformation)
 
-    def matches(self, actual: Selection):
+    def _matches(self, actual: Selection) -> MatchResult:
         try:
             element = actual.element
-        except NoSuchElementException as exc:
+        except NoSuchElementException:
             return MatchResult.failure(f"Could not find {actual}")
         return self.matcher.matches(element)
+
+    def _build_failure_msg(self, actual: Selection, result: MatchResult):
+        failure_msg = "Expect %s %s" % (
+            actual, self.matcher.build_description(MatcherDescriptionTransformer())
+        )
+        if result.description:
+            failure_msg += ": " + result.description
+        return failure_msg
+
+    def matches(self, actual: Selection) -> MatchResult:
+        result = self._matches(actual)
+        if not result and actual.selector.screenshot_on_failed_check:
+            save_screenshot(actual.driver, self._build_failure_msg(actual, result))
+
+        return result
 
 
 class Selection:
@@ -78,48 +93,45 @@ class Selection:
         )
 
     @contextmanager
-    def _exception_handler(self):
+    def save_screenshot_on_exception(self):
         try:
             yield
         except WebDriverException as exp:
-            if self.selector.screenshot_on_exception:
-                save_screenshot(self.driver, str(exp))
+            save_screenshot(self.driver, str(exp))
             raise
 
+    @contextmanager
+    def _exception_handler(self):
+        if self.selector.screenshot_on_exception:
+            with self.save_screenshot_on_exception():
+                yield
+        else:
+            yield
+
     @property
-    def _element(self) -> WebElement:
+    def element(self) -> WebElement:
         self._wait_expected_condition()
         return self.driver.find_element(self.by, self.value)
 
     @property
-    def element(self) -> WebElement:
-        with self._exception_handler():
-            return self._element
-
-    @property
-    def _elements(self) -> Sequence[WebElement]:
+    def elements(self) -> Sequence[WebElement]:
         self._wait_expected_condition()
         return self.driver.find_elements(self.by, self.value)
-
-    @property
-    def elements(self) -> Sequence[WebElement]:
-        with self._exception_handler():
-            return self._elements
 
     def click(self):
         lcc.log_info(f"Click on {self}")
         with self._exception_handler():
-            self._element.click()
+            self.element.click()
 
     def clear(self):
         lcc.log_info(f"Clear {self}")
         with self._exception_handler():
-            self._element.clear()
+            self.element.clear()
 
     def set_text(self, text: str):
         lcc.log_info(f"Set text '{text}' on {self}")
         with self._exception_handler():
-            self._element.send_keys(text)
+            self.element.send_keys(text)
 
     def check_element(self, expected):
         check_that(str(self), self, HasElement(expected))
@@ -135,7 +147,7 @@ class Selection:
             description = f"Screenshot of {self}"
 
         with lcc.prepare_image_attachment("screenshot.png", description) as path:
-            self._element.screenshot(path)
+            self.element.screenshot(path)
 
     def _select(self, method_name, value=NotImplemented):
         # Build contextual info for logs
@@ -146,7 +158,7 @@ class Selection:
         lcc.log_info(f"{action_label} the {self}".capitalize())
 
         with self._exception_handler():
-            select = Select(self._element)
+            select = Select(self.element)
             if value is NotImplemented:
                 getattr(select, method_name)()
             else:

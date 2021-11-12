@@ -26,7 +26,7 @@ def log_check_mock(mocker):
 
 @pytest.fixture
 def prepare_image_attachment_mock(mocker):
-    return mocker.patch("lemoncheesecake_selenium.selection.lcc.prepare_image_attachment")
+    return mocker.patch("lemoncheesecake.api.prepare_image_attachment")
 
 
 @pytest.fixture
@@ -225,6 +225,24 @@ def test_check_element_failure_not_found(log_check_mock):
     )
 
 
+@pytest.mark.parametrize(
+    "method_name", ("check_element", "require_element", "assert_element")
+)
+def test_check_element_failure_match_with_screenshot(log_check_mock, prepare_image_attachment_mock, method_name):
+    mock = MagicMock()
+    mock.find_element.return_value = FAKE_WEB_ELEMENT
+    selector = Selector(mock, screenshot_on_failed_check=True)
+    selection = selector.by_id("value")
+    matcher = MyMatcher(result=MatchResult.failure())
+    try:
+        getattr(selection, method_name)(matcher)
+    except lcc.AbortTest:  # require_element and assert_element will raise AbortTest
+        pass
+    log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, None)
+    prepare_image_attachment_mock.assert_called()
+    assert matcher.actual is FAKE_WEB_ELEMENT
+
+
 # only perform basic tests on require_element & assert_element methods since they
 # are simple calls to their lemoncheesecake counterparts
 # the matcher wrapping system is already tested in depth the `test_check_element_*` tests
@@ -321,15 +339,14 @@ def test_with_must_be_waited_until_not_failure():
         lambda s: s.deselect_by_visible_text("foo")
     )
 )
-def test_screenshot_on_exception(log_info_mock, action):
+def test_screenshot_on_exception(log_info_mock, prepare_image_attachment_mock, action):
     driver_mock = MagicMock()
     driver_mock.find_element.side_effect = WebDriverException()
     selector = Selector(driver_mock, screenshot_on_exception=True)
     selection = selector.by_id("value")
-    with patch("lemoncheesecake_selenium.utils.lcc.prepare_image_attachment") as mock:
-        with pytest.raises(WebDriverException):
-            action(selection)
-        mock.assert_called()
+    with pytest.raises(WebDriverException):
+        action(selection)
+    prepare_image_attachment_mock.assert_called()
 
 
 def test_save_screenshot(prepare_image_attachment_mock):
