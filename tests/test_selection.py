@@ -307,6 +307,31 @@ def test_with_must_be_waited_until_not_failure():
         assert selection.element
 
 
+@pytest.mark.parametrize(
+    "action", (
+        lambda s: s.click(),
+        lambda s: s.clear(),
+        lambda s: s.set_text("foo"),
+        lambda s: s.select_by_value("foo"),
+        lambda s: s.select_by_index(1),
+        lambda s: s.select_by_visible_text("foo"),
+        lambda s: s.deselect_all(),
+        lambda s: s.deselect_by_index(1),
+        lambda s: s.deselect_by_value("foo"),
+        lambda s: s.deselect_by_visible_text("foo")
+    )
+)
+def test_screenshot_on_exception(log_info_mock, action):
+    driver_mock = MagicMock()
+    driver_mock.find_element.side_effect = WebDriverException()
+    selector = Selector(driver_mock, screenshot_on_exception=True)
+    selection = selector.by_id("value")
+    with patch("lemoncheesecake_selenium.utils.lcc.prepare_image_attachment") as mock:
+        with pytest.raises(WebDriverException):
+            action(selection)
+        mock.assert_called()
+
+
 def test_save_screenshot(prepare_image_attachment_mock):
     mock = MagicMock()
     selector = Selector(mock)

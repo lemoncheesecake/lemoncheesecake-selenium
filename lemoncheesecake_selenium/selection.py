@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from typing import Sequence
+from contextlib import contextmanager
 
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import WebDriverException, NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,6 +12,8 @@ from selenium.webdriver.common.by import By
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, require_that, assert_that
 from lemoncheesecake.matching.matcher import Matcher, MatchResult
+
+from lemoncheesecake_selenium.utils import save_screenshot
 
 
 class HasElement(Matcher):
@@ -74,27 +77,49 @@ class Selection:
             message="expected condition has not been fulfilled"
         )
 
+    @contextmanager
+    def _exception_handler(self):
+        try:
+            yield
+        except WebDriverException as exp:
+            if self.selector.screenshot_on_exception:
+                save_screenshot(self.driver, str(exp))
+            raise
+
     @property
-    def element(self) -> WebElement:
+    def _element(self) -> WebElement:
         self._wait_expected_condition()
         return self.driver.find_element(self.by, self.value)
 
     @property
-    def elements(self) -> Sequence[WebElement]:
+    def element(self) -> WebElement:
+        with self._exception_handler():
+            return self._element
+
+    @property
+    def _elements(self) -> Sequence[WebElement]:
         self._wait_expected_condition()
         return self.driver.find_elements(self.by, self.value)
 
+    @property
+    def elements(self) -> Sequence[WebElement]:
+        with self._exception_handler():
+            return self._elements
+
     def click(self):
         lcc.log_info(f"Click on {self}")
-        self.element.click()
+        with self._exception_handler():
+            self._element.click()
 
     def clear(self):
         lcc.log_info(f"Clear {self}")
-        self.element.clear()
+        with self._exception_handler():
+            self._element.clear()
 
     def set_text(self, text: str):
         lcc.log_info(f"Set text '{text}' on {self}")
-        self.element.send_keys(text)
+        with self._exception_handler():
+            self._element.send_keys(text)
 
     def check_element(self, expected):
         check_that(str(self), self, HasElement(expected))
@@ -110,7 +135,7 @@ class Selection:
             description = f"Screenshot of {self}"
 
         with lcc.prepare_image_attachment("screenshot.png", description) as path:
-            self.element.screenshot(path)
+            self._element.screenshot(path)
 
     def _select(self, method_name, value=NotImplemented):
         # Build contextual info for logs
@@ -120,11 +145,12 @@ class Selection:
 
         lcc.log_info(f"{action_label} the {self}".capitalize())
 
-        select = Select(self.element)
-        if value is NotImplemented:
-            getattr(select, method_name)()
-        else:
-            getattr(select, method_name)(value)
+        with self._exception_handler():
+            select = Select(self._element)
+            if value is NotImplemented:
+                getattr(select, method_name)()
+            else:
+                getattr(select, method_name)(value)
 
     def select_by_value(self, value):
         self._select("select_by_value", value)
