@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Sequence, Callable
 from contextlib import contextmanager
 
 from selenium.common.exceptions import NoSuchElementException
@@ -73,10 +73,30 @@ class Selection:
         self._expected_condition_reverse = reverse
         return self
 
-    def must_be_waited_until(self, expected_condition, timeout=None, extra_args=()):
+    def must_be_waited_until(self, expected_condition: Callable, timeout: int = None, extra_args=()):
+        """
+        The method can be called to set an explicit wait
+        (see https://selenium-python.readthedocs.io/waits.html#explicit-waits) on the underlying element
+        so that it is considered available when the ``expected_condition`` is met.
+
+        :param expected_condition: a callable that will take a locator (a tuple of (by, path)) as first argument
+        :param timeout: wait timeout
+        :param extra_args: extra arguments to be passed to the ``expected_condition`` callable
+        :return: ``self``, meaning this method can be chain called
+        """
         return self._must_be_waited(expected_condition, timeout, extra_args, reverse=False)
 
-    def must_be_waited_until_not(self, expected_condition, timeout=None, extra_args=()):
+    def must_be_waited_until_not(self, expected_condition: Callable, timeout: int = None, extra_args=()):
+        """
+        The method can be called to set an explicit wait
+        (see https://selenium-python.readthedocs.io/waits.html#explicit-waits) on the underlying element
+        so that it is considered available when the ``expected_condition`` is NOT met.
+
+        :param expected_condition: a callable that will take a locator (a tuple of (by, path)) as first argument
+        :param timeout: wait timeout
+        :param extra_args: extra arguments to be passed to the ``expected_condition`` callable
+        :return: ``self``, meaning this method can be chain called
+        """
         return self._must_be_waited(expected_condition, timeout, extra_args, reverse=True)
 
     def _wait_expected_condition(self):
@@ -102,39 +122,82 @@ class Selection:
 
     @property
     def element(self) -> WebElement:
+        """
+        :return: the underlying ``WebElement`` with the explicit wait taken into account (if any has been set)
+        """
         self._wait_expected_condition()
         return self.driver.find_element(self.by, self.value)
 
     @property
     def elements(self) -> Sequence[WebElement]:
+        """
+        :return: the underlying ``WebElement`` list with the explicit wait taken into account (if any has been set)
+        """
         self._wait_expected_condition()
         return self.driver.find_elements(self.by, self.value)
 
     def click(self):
+        """
+        Click on the element.
+        """
         lcc.log_info(f"Click on {self}")
         with self._exception_handler():
             self.element.click()
 
     def clear(self):
+        """
+        Clear the element.
+        """
         lcc.log_info(f"Clear {self}")
         with self._exception_handler():
             self.element.clear()
 
     def set_text(self, text: str):
+        """
+        Set to text in the element.
+
+        :param text: text to be set
+        """
         lcc.log_info(f"Set text '{text}' on {self}")
         with self._exception_handler():
             self.element.send_keys(text)
 
-    def check_element(self, expected):
+    def check_element(self, expected: Matcher):
+        """
+        Check that the element matches ``expected`` using
+        the :py:func:`lemoncheesecake.matching.check_that` function.
+
+        :param expected: a ``Matcher`` instance whose ``matches`` method will be called with
+            the ``WebElement`` that has been found
+        """
         check_that(str(self), self, HasElement(expected))
 
-    def require_element(self, expected):
+    def require_element(self, expected: Matcher):
+        """
+        Check that the element matches ``expected`` using
+        the :py:func:`lemoncheesecake.matching.require_that` function.
+
+        :param expected: a ``Matcher`` instance whose ``matches`` method will be called with
+            the ``WebElement`` that has been found
+        """
         require_that(str(self), self, HasElement(expected))
 
-    def assert_element(self, expected):
+    def assert_element(self, expected: Matcher):
+        """
+        Check that the element matches ``expected`` using
+        the :py:func:`lemoncheesecake.matching.assert_that` function.
+
+        :param expected: a ``Matcher`` instance whose ``matches`` method will be called with
+            the ``WebElement`` that has been found
+        """
         assert_that(str(self), self, HasElement(expected))
 
     def save_screenshot(self, description: str = None):
+        """
+        Take and save (as lemoncheesecake attachment) a screenshot of the underlying element.
+
+        :param description: description of the image attachment for that screenshot
+        """
         if description is None:
             description = f"Screenshot of {self}"
 
@@ -157,24 +220,57 @@ class Selection:
                 getattr(select, method_name)(value)
 
     def select_by_value(self, value):
+        """
+        Select option by its value considering the underlying element is a SELECT element.
+
+        :param value: the value to be selected
+        """
         self._select("select_by_value", value)
 
     def select_by_index(self, index):
+        """
+        Select option by its index considering the underlying element is a SELECT element.
+
+        :param index: the index to be selected
+        """
         self._select("select_by_index", index)
 
     def select_by_visible_text(self, text):
+        """
+        Select option by its text considering the underlying element is a SELECT element.
+
+        :param text: the text to be selected
+        """
         self._select("select_by_visible_text", text)
 
     def deselect_all(self):
+        """
+        Deselect all options considering the underlying element is a SELECT element.
+        """
         self._select("deselect_all")
 
-    def deselect_by_index(self, index):
-        self._select("deselect_by_index", index)
-
     def deselect_by_value(self, value):
+        """
+        Deselect option by its value considering the underlying element is a SELECT element.
+
+        :param value: the value to be deselected
+        """
         self._select("deselect_by_value", value)
 
+    def deselect_by_index(self, index):
+        """
+        Deselect option by its index considering the underlying element is a SELECT element.
+
+        :param index: the index to be deselected
+        """
+        self._select("deselect_by_index", index)
+
     def deselect_by_visible_text(self, text):
+        """
+        Deselect option by its text considering the underlying element is a SELECT element.
+
+        :param text: the text to be deselected
+        """
         self._select("deselect_by_visible_text", text)
 
     def __str__(self):

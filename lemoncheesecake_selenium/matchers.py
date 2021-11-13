@@ -1,3 +1,5 @@
+from typing import Union
+
 from selenium.webdriver.remote.webelement import WebElement
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 from lemoncheesecake.matching import *
@@ -18,7 +20,13 @@ class HasText(Matcher):
         return self.matcher.matches(actual.text)
 
 
-def has_text(expected):
+def has_text(expected: Union[Matcher, str]):
+    """
+    Test if ``WebElement`` instance has text.
+
+    :param expected: expected text
+    :return: ``Matcher`` instance
+    """
     return HasText(is_(expected))
 
 
@@ -48,7 +56,15 @@ class EntityMatcher(Matcher):
             return MatchResult.success()
 
 
-def has_attribute(name, matcher=None):
+def has_attribute(name: str, matcher: Union[str, Matcher] = None):
+    """
+    Test if ``WebElement`` element has entity.
+
+    :param name: attribute name
+    :param matcher: attribute matcher
+    :return: ``Matcher`` instance
+    """
+
     return EntityMatcher(
         "attribute",
         name,
@@ -57,7 +73,7 @@ def has_attribute(name, matcher=None):
     )
 
 
-def has_property(name, matcher=None):
+def has_property(name, matcher: Union[str, Matcher] = None):
     return EntityMatcher(
         "property",
         name,
@@ -79,12 +95,27 @@ class StateMatcher(Matcher):
 
 
 def is_displayed():
+    """
+    Test if ``WebElement`` element is displayed.
+
+    :return: :py:class:`Matcher <lemoncheesecake.matching.matcher.Matcher>` instance
+    """
     return StateMatcher("displayed", lambda actual: actual.is_displayed())
 
 
 def is_enabled():
+    """
+    Test if ``WebElement`` element is enabled.
+
+    :return: :py:class:`Matcher <lemoncheesecake.matching.matcher.Matcher>` instance
+    """
     return StateMatcher("enabled", lambda actual: actual.is_enabled())
 
 
 def is_selected():
+    """
+    Test if ``WebElement`` element is selected.
+
+    :return: :py:class:`Matcher <lemoncheesecake.matching.matcher.Matcher>` instance
+    """
     return StateMatcher("selected", lambda actual: actual.is_selected())
