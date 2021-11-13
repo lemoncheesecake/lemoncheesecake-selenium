@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Sequence
 from contextlib import contextmanager
 
-from selenium.common.exceptions import WebDriverException, NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,7 +13,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, require_that, assert_that
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 
-from lemoncheesecake_selenium.utils import save_screenshot
+from lemoncheesecake_selenium.utils import save_screenshot, save_screenshot_on_exception
 
 
 class HasElement(Matcher):
@@ -93,17 +93,9 @@ class Selection:
         )
 
     @contextmanager
-    def save_screenshot_on_exception(self):
-        try:
-            yield
-        except WebDriverException as exp:
-            save_screenshot(self.driver, str(exp))
-            raise
-
-    @contextmanager
     def _exception_handler(self):
         if self.selector.screenshot_on_exception:
-            with self.save_screenshot_on_exception():
+            with save_screenshot_on_exception(self.driver):
                 yield
         else:
             yield
