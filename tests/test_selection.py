@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-import callee
+from callee import StartsWith, Any
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException
@@ -86,7 +86,7 @@ def test_click(log_info_mock):
     selection = selector.by_id("value")
     selection.click()
     assert mock.find_element.return_value.click.called
-    log_info_mock.assert_called_with(callee.StartsWith("Click on"))
+    log_info_mock.assert_called_with(StartsWith("Click on"))
 
 
 def test_click_failure(log_info_mock):
@@ -104,7 +104,7 @@ def test_set_text(log_info_mock):
     selection = selector.by_id("value")
     selection.set_text("content")
     mock.find_element.return_value.send_keys.assert_called_with("content")
-    log_info_mock.assert_called_with(callee.StartsWith("Set text"))
+    log_info_mock.assert_called_with(StartsWith("Set text"))
 
 
 def test_set_text_failure(log_info_mock):
@@ -122,7 +122,7 @@ def test_clear(log_info_mock):
     selection = selector.by_id("value")
     selection.clear()
     mock.find_element.return_value.clear.assert_called()
-    log_info_mock.assert_called_with(callee.StartsWith("Clear"))
+    log_info_mock.assert_called_with(StartsWith("Clear"))
 
 
 def test_clear_failure(log_info_mock):
@@ -149,7 +149,7 @@ def _test_select(log_info_mock, method_name, args, expected_log):
     ("select_by_value", "select_by_index", "select_by_visible_text")
 )
 def test_select(log_info_mock, method_name):
-    _test_select(log_info_mock, method_name, ("arg",), callee.StartsWith("Select"))
+    _test_select(log_info_mock, method_name, ("arg",), StartsWith("Select"))
 
 
 @pytest.mark.parametrize(
@@ -158,7 +158,7 @@ def test_select(log_info_mock, method_name):
      ("deselect_by_value", ("opt",)), ("deselect_by_index", (1,)), ("deselect_by_visible_text", ("opt",)))
 )
 def test_deselect(log_info_mock, method_name, args):
-    _test_select(log_info_mock, method_name, args, callee.StartsWith("Deselect"))
+    _test_select(log_info_mock, method_name, args, StartsWith("Deselect"))
 
 
 def _test_select_failure(method_name, args):
@@ -221,7 +221,7 @@ def test_check_element_failure_not_found(log_check_mock):
     matcher = MyMatcher(result=MatchResult.failure())
     selection.check_element(matcher)
     log_check_mock.assert_called_with(
-        "Expect element identified by id 'value' to be here", False, callee.StartsWith("Could not find")
+        "Expect element identified by id 'value' to be here", False, StartsWith("Could not find")
     )
 
 
@@ -233,12 +233,12 @@ def test_check_element_failure_match_with_screenshot(log_check_mock, prepare_ima
     mock.find_element.return_value = FAKE_WEB_ELEMENT
     selector = Selector(mock, screenshot_on_failed_check=True)
     selection = selector.by_id("value")
-    matcher = MyMatcher(result=MatchResult.failure())
+    matcher = MyMatcher(result=MatchResult.failure("Not found"))
     try:
         getattr(selection, method_name)(matcher)
     except lcc.AbortTest:  # require_element and assert_element will raise AbortTest
         pass
-    log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, None)
+    log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, Any())
     prepare_image_attachment_mock.assert_called()
     assert matcher.actual is FAKE_WEB_ELEMENT
 
@@ -357,7 +357,7 @@ def test_save_screenshot(prepare_image_attachment_mock):
     prepare_image_attachment_mock.assert_called_with(
         "screenshot.png", "Screenshot of element identified by id 'value'"
     )
-    mock.find_element.return_value.screenshot.assert_called_with(callee.Any())
+    mock.find_element.return_value.screenshot.assert_called_with(Any())
 
 
 def test_save_screenshot_with_description(prepare_image_attachment_mock):
@@ -368,7 +368,7 @@ def test_save_screenshot_with_description(prepare_image_attachment_mock):
     prepare_image_attachment_mock.assert_called_with(
         "screenshot.png", "some description"
     )
-    mock.find_element.return_value.screenshot.assert_called_with(callee.Any())
+    mock.find_element.return_value.screenshot.assert_called_with(Any())
 
 
 def test_save_screenshot_exception_raised_by_find_element(prepare_image_attachment_mock):
