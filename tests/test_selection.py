@@ -231,7 +231,7 @@ def test_check_element_failure_not_found(log_check_mock):
 def test_check_element_failure_match_with_screenshot(log_check_mock, prepare_image_attachment_mock, method_name):
     mock = MagicMock()
     mock.find_element.return_value = FAKE_WEB_ELEMENT
-    selector = Selector(mock, screenshot_on_failed_check=True)
+    selector = Selector(mock, screenshot_on_failed_checks=True)
     selection = selector.by_id("value")
     matcher = MyMatcher(result=MatchResult.failure("Not found"))
     try:
@@ -342,7 +342,7 @@ def test_with_must_be_waited_until_not_failure():
 def test_screenshot_on_exception(log_info_mock, prepare_image_attachment_mock, action):
     driver_mock = MagicMock()
     driver_mock.find_element.side_effect = WebDriverException()
-    selector = Selector(driver_mock, screenshot_on_exception=True)
+    selector = Selector(driver_mock, screenshot_on_exceptions=True)
     selection = selector.by_id("value")
     with pytest.raises(WebDriverException):
         action(selection)

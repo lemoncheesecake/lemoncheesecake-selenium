@@ -41,7 +41,7 @@ class HasElement(Matcher):
 
     def matches(self, actual: Selection) -> MatchResult:
         result = self._matches(actual)
-        if not result and actual.selector.screenshot_on_failed_check:
+        if not result and actual.selector.screenshot_on_failed_checks:
             save_screenshot(actual.driver, self._build_failure_msg(actual, result))
 
         return result
@@ -94,7 +94,7 @@ class Selection:
 
     @contextmanager
     def _exception_handler(self):
-        if self.selector.screenshot_on_exception:
+        if self.selector.screenshot_on_exceptions:
             with save_screenshot_on_exception(self.driver):
                 yield
         else:

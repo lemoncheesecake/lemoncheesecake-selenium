@@ -18,7 +18,7 @@ def test_constructor():
     selector = Selector(None)
     assert selector.driver is None
     assert selector.timeout is 10
-    assert selector.screenshot_on_exception is False
+    assert selector.screenshot_on_exceptions is False
 
 
 @pytest.mark.parametrize(
@@ -46,8 +46,8 @@ def test_timeout():
 
 
 def test_screenshot_on_exception():
-    selector = Selector(None, screenshot_on_exception=True)
-    assert selector.screenshot_on_exception is True
+    selector = Selector(None, screenshot_on_exceptions=True)
+    assert selector.screenshot_on_exceptions is True
 
 
 def test_change_selector_class_default_timeout():
@@ -62,11 +62,11 @@ def test_change_selector_class_default_timeout():
 
 
 def test_change_selector_class_default_screenshot_on_exception():
-    assert Selector(None).screenshot_on_exception == Selector.DEFAULT_SCREENSHOT_ON_EXCEPTION
+    assert Selector(None).screenshot_on_exceptions == Selector.DEFAULT_SCREENSHOT_ON_EXCEPTIONS
 
-    orig_setting = Selector.DEFAULT_SCREENSHOT_ON_EXCEPTION
+    orig_setting = Selector.DEFAULT_SCREENSHOT_ON_EXCEPTIONS
     try:
-        Selector.DEFAULT_SCREENSHOT_ON_EXCEPTION = True
-        assert Selector(None).screenshot_on_exception is True
+        Selector.DEFAULT_SCREENSHOT_ON_EXCEPTIONS = True
+        assert Selector(None).screenshot_on_exceptions is True
     finally:
-        Selector.DEFAULT_SCREENSHOT_ON_EXCEPTION = orig_setting
+        Selector.DEFAULT_SCREENSHOT_ON_EXCEPTIONS = orig_setting
