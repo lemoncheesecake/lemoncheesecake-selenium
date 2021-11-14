@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from callee import StartsWith, Any
+from callee import String, StartsWith, Any
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException
@@ -241,6 +241,39 @@ def test_check_element_failure_match_with_screenshot(log_check_mock, prepare_ima
     log_check_mock.assert_called_with("Expect element identified by id 'value' to be here", False, Any())
     prepare_image_attachment_mock.assert_called()
     assert matcher.actual is FAKE_WEB_ELEMENT
+
+
+@pytest.mark.parametrize(
+    "method_name,mock_raise_exception,abort_test_must_be_raised,check_outcome", (
+        ("check_no_element", True, False, True),
+        ("check_no_element", False, False, False),
+        ("require_no_element", True, False, True),
+        ("require_no_element", False, True, False),
+        ("assert_no_element", True, False, None),
+        ("assert_no_element", False, True, False)
+    )
+)
+def test_check_no_element(log_check_mock,
+                          method_name, mock_raise_exception, abort_test_must_be_raised, check_outcome):
+    mock = MagicMock()
+    if mock_raise_exception:
+        mock.find_element.side_effect = NoSuchElementException()
+    else:
+        mock.find_element.return_value = FAKE_WEB_ELEMENT
+
+    selector = Selector(mock)
+    selection = selector.by_id("value")
+
+    if abort_test_must_be_raised:
+        with pytest.raises(lcc.AbortTest):
+            getattr(selection, method_name)()
+    else:
+        getattr(selection, method_name)()
+
+    if check_outcome is not None:
+        log_check_mock.assert_called_with(
+            "Expect element identified by id 'value' to not be present in page", check_outcome, Any()
+        )
 
 
 # only perform basic tests on require_element & assert_element methods since they

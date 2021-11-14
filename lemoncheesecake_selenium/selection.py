@@ -10,10 +10,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, require_that, assert_that
+from lemoncheesecake.matching import check_that, require_that, assert_that, not_
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 
 from lemoncheesecake_selenium.utils import save_screenshot, save_screenshot_on_exception
+
+
+class IsInPage(Matcher):
+    def build_description(self, transformation):
+        return transformation("to be present in page")
+
+    def matches(self, _):
+        return MatchResult.success()
 
 
 class HasElement(Matcher):
@@ -172,6 +180,13 @@ class Selection:
         """
         check_that(str(self), self, HasElement(expected))
 
+    def check_no_element(self):
+        """
+        Check that the element is not present using
+        the :py:func:`lemoncheesecake.matching.check_that` function.
+        """
+        check_that(str(self), self, not_(HasElement(IsInPage())))
+
     def require_element(self, expected: Matcher):
         """
         Check that the element matches ``expected`` using
@@ -182,6 +197,13 @@ class Selection:
         """
         require_that(str(self), self, HasElement(expected))
 
+    def require_no_element(self):
+        """
+        Check that the element is not present using
+        the :py:func:`lemoncheesecake.matching.require_that` function.
+        """
+        require_that(str(self), self, not_(HasElement(IsInPage())))
+
     def assert_element(self, expected: Matcher):
         """
         Check that the element matches ``expected`` using
@@ -191,6 +213,13 @@ class Selection:
             the ``WebElement`` that has been found
         """
         assert_that(str(self), self, HasElement(expected))
+
+    def assert_no_element(self):
+        """
+        Check that the element is not present using
+        the :py:func:`lemoncheesecake.matching.assert_that` function.
+        """
+        assert_that(str(self), self, not_(HasElement(IsInPage())))
 
     def save_screenshot(self, description: str = None):
         """
