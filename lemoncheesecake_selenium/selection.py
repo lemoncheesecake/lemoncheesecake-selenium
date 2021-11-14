@@ -170,15 +170,16 @@ class Selection:
         with self._exception_handler():
             self.element.send_keys(text)
 
-    def check_element(self, expected: Matcher):
+    def check_element(self, expected: Matcher = None):
         """
         Check that the element matches ``expected`` using
         the :py:func:`lemoncheesecake.matching.check_that` function.
+        If the method is called without argument, the presence of the element is checked.
 
         :param expected: a ``Matcher`` instance whose ``matches`` method will be called with
             the ``WebElement`` that has been found
         """
-        check_that(str(self), self, HasElement(expected))
+        check_that(str(self), self, HasElement(expected or IsInPage()))
 
     def check_no_element(self):
         """
@@ -187,15 +188,16 @@ class Selection:
         """
         check_that(str(self), self, not_(HasElement(IsInPage())))
 
-    def require_element(self, expected: Matcher):
+    def require_element(self, expected: Matcher = None):
         """
         Check that the element matches ``expected`` using
         the :py:func:`lemoncheesecake.matching.require_that` function.
+        If the method is called without argument, the presence of the element is checked.
 
         :param expected: a ``Matcher`` instance whose ``matches`` method will be called with
             the ``WebElement`` that has been found
         """
-        require_that(str(self), self, HasElement(expected))
+        require_that(str(self), self, HasElement(expected or IsInPage()))
 
     def require_no_element(self):
         """
@@ -204,15 +206,16 @@ class Selection:
         """
         require_that(str(self), self, not_(HasElement(IsInPage())))
 
-    def assert_element(self, expected: Matcher):
+    def assert_element(self, expected: Matcher = None):
         """
         Check that the element matches ``expected`` using
         the :py:func:`lemoncheesecake.matching.assert_that` function.
+        If the method is called without argument, the presence of the element is checked.
 
         :param expected: a ``Matcher`` instance whose ``matches`` method will be called with
             the ``WebElement`` that has been found
         """
-        assert_that(str(self), self, HasElement(expected))
+        assert_that(str(self), self, HasElement(expected or IsInPage()))
 
     def assert_no_element(self):
         """
