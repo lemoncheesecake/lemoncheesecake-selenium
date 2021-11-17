@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching.matcher import MatchResult
-from lemoncheesecake_selenium import Selector
+from lemoncheesecake_selenium import Selector, Selection
 
 from helpers import MyMatcher
 
@@ -32,6 +32,17 @@ def prepare_image_attachment_mock(mocker):
 @pytest.fixture
 def select_mock(mocker):
     return mocker.patch("lemoncheesecake_selenium.selection.Select")
+
+
+@pytest.fixture
+def preserve_selection_settings():
+    orig_default_timeout = Selection.default_timeout
+    orig_screenshot_on_exceptions = Selection.screenshot_on_exceptions
+    orig_screenshot_on_failed_checks = Selection.screenshot_on_failed_checks
+    yield
+    Selection.default_timeout = orig_default_timeout
+    Selection.screenshot_on_exceptions = orig_screenshot_on_exceptions
+    Selection.screenshot_on_failed_checks = orig_screenshot_on_failed_checks
 
 
 def test_element():
@@ -75,7 +86,7 @@ def test_elements():
     )
 )
 def test_str(method_name, expected):
-    selector = Selector(None)
+    selector = Selector(None)  # noqa
     selection = getattr(selector, method_name)("value")
     assert str(selection) == expected
 
@@ -228,12 +239,14 @@ def test_check_element_failure_not_found(log_check_mock):
 @pytest.mark.parametrize(
     "method_name", ("check_element", "require_element", "assert_element")
 )
+@pytest.mark.usefixtures("preserve_selection_settings")
 def test_check_element_failure_match_with_screenshot(log_check_mock, prepare_image_attachment_mock, method_name):
     mock = MagicMock()
     mock.find_element.return_value = FAKE_WEB_ELEMENT
-    selector = Selector(mock, screenshot_on_failed_checks=True)
+    selector = Selector(mock)
     selection = selector.by_id("value")
     matcher = MyMatcher(result=MatchResult.failure("Not found"))
+    Selection.screenshot_on_failed_checks = True
     try:
         getattr(selection, method_name)(matcher)
     except lcc.AbortTest:  # require_element and assert_element will raise AbortTest
@@ -366,29 +379,35 @@ def test_with_must_be_waited_until_failure():
         assert selection.element
 
 
+@pytest.mark.usefixtures("preserve_selection_settings")
 def test_with_must_be_waited_until_not_success():
     mock = MagicMock()
     mock.find_element.return_value = FAKE_WEB_ELEMENT
-    selector = Selector(mock, timeout=0)
+    selector = Selector(mock)
     selection = selector.by_id("value")
+    Selection.default_timeout = 0
     selection.must_be_waited_until_not(lambda _: lambda _: False)
     assert selection.element is FAKE_WEB_ELEMENT
 
 
+@pytest.mark.usefixtures("preserve_selection_settings")
 def test_with_must_be_waited_until_not_extra_args():
     mock = MagicMock()
     mock.find_element.return_value = FAKE_WEB_ELEMENT
-    selector = Selector(mock, timeout=0)
+    selector = Selector(mock)
     selection = selector.by_id("value")
+    Selection.default_timeout = 0
     selection.must_be_waited_until_not(lambda arg1, arg2: lambda arg: False, extra_args=("value",))
     assert selection.element is FAKE_WEB_ELEMENT
 
 
+@pytest.mark.usefixtures("preserve_selection_settings")
 def test_with_must_be_waited_until_not_failure():
     mock = MagicMock()
     mock.find_element.return_value = FAKE_WEB_ELEMENT
-    selector = Selector(mock, timeout=0)
+    selector = Selector(mock)
     selection = selector.by_id("value")
+    Selection.default_timeout = 0
     selection.must_be_waited_until_not(lambda _: lambda _: True)
     with pytest.raises(TimeoutException):
         assert selection.element
@@ -408,11 +427,13 @@ def test_with_must_be_waited_until_not_failure():
         lambda s: s.deselect_by_visible_text("foo")
     )
 )
+@pytest.mark.usefixtures("preserve_selection_settings")
 def test_screenshot_on_exception(log_info_mock, prepare_image_attachment_mock, action):
     driver_mock = MagicMock()
     driver_mock.find_element.side_effect = WebDriverException()
-    selector = Selector(driver_mock, screenshot_on_exceptions=True)
+    selector = Selector(driver_mock)
     selection = selector.by_id("value")
+    Selection.screenshot_on_exceptions = True
     with pytest.raises(WebDriverException):
         action(selection)
     prepare_image_attachment_mock.assert_called()

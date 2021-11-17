@@ -49,13 +49,25 @@ class HasElement(Matcher):
 
     def matches(self, actual: Selection) -> MatchResult:
         result = self._matches(actual)
-        if not result and actual.selector.screenshot_on_failed_checks:
+        if not result and actual.screenshot_on_failed_checks:
             save_screenshot(actual.driver, self._build_failure_msg(actual, result))
 
         return result
 
 
 class Selection:
+    #: The default timeout value to use if no ``timeout`` argument is passed to
+    #: the :py:func:`must_be_waited_until` / :py:func:`must_be_waited_until_not` methods.
+    default_timeout = 10
+    #: Whether or not a screenshot will be automatically saved upon
+    #: upon ``WebDriverException`` exceptions on methods such as
+    #: :py:func:`Selection.set_text`, :py:func:`Selection.click`, etc...
+    screenshot_on_exceptions = False
+    #: Whether or not a screenshot will be automatically saved upon failed checks
+    #: with :py:func:`Selection.check_element`,
+    #: :py:func:`Selection.require_element` and :py:func:`Selection.assert_element` methods.
+    screenshot_on_failed_checks = False
+
     def __init__(self, selector, by, value):
         from .selector import Selector  # workaround for circular import
         self.selector: Selector = selector
@@ -76,7 +88,7 @@ class Selection:
 
     def _must_be_waited(self, expected_condition, timeout, extra_args, reverse):
         self._expected_condition = expected_condition
-        self._expected_condition_timeout = timeout if timeout is not None else self.selector.timeout
+        self._expected_condition_timeout = timeout if timeout is not None else self.default_timeout
         self._expected_condition_extra_args = extra_args
         self._expected_condition_reverse = reverse
         return self
@@ -122,7 +134,7 @@ class Selection:
 
     @contextmanager
     def _exception_handler(self):
-        if self.selector.screenshot_on_exceptions:
+        if self.screenshot_on_exceptions:
             with save_screenshot_on_exception(self.driver):
                 yield
         else:
