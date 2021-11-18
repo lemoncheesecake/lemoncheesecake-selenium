@@ -68,19 +68,15 @@ class Selection:
     #: :py:func:`Selection.require_element` and :py:func:`Selection.assert_element` methods.
     screenshot_on_failed_checks = False
 
-    def __init__(self, selector, by, value):
+    def __init__(self, driver, by, value):
         from .selector import Selector  # workaround for circular import
-        self.selector: Selector = selector
+        self.driver = driver
         self.by = by
         self.value = value
         self._expected_condition = None
         self._expected_condition_timeout = 0
         self._expected_condition_extra_args = ()
         self._expected_condition_reverse = False
-
-    @property
-    def driver(self) -> WebDriver:
-        return self.selector.driver
 
     @property
     def locator(self):

@@ -28,8 +28,9 @@ def test_constructor():
     )
 )
 def test_by(name, expected):
-    selector = Selector(None)  # noqa
+    driver = object()
+    selector = Selector(driver)  # noqa
     selection = getattr(selector, name)("dummy")
     assert selection.by == expected
     assert selection.value == "dummy"
-    assert selection.selector is selector
+    assert selection.driver is driver

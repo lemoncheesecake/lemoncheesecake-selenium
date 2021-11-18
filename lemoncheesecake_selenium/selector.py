@@ -6,7 +6,7 @@ from lemoncheesecake_selenium.selection import Selection
 def _selector(by):
 
     def builder(selector, value):
-        return Selection(selector, by, value)
+        return Selection(selector.driver, by, value)
     builder.__doc__ = f"""
     Get a :py:class:`Selection` using element's {by}
     
