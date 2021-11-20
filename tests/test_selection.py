@@ -315,42 +315,6 @@ def test_assert_element(log_check_mock):
     assert matcher.actual is FAKE_WEB_ELEMENT
 
 
-def test_check_element_without_argument_success(log_check_mock):
-    mock = MagicMock()
-    mock.find_element.return_value = FAKE_WEB_ELEMENT
-    selector = Selector(mock)
-    selection = selector.by_id("value")
-    selection.check_element()
-    log_check_mock.assert_called_with(Contains("present in page"), True, Any())
-
-
-def test_check_element_without_argument_failure(log_check_mock):
-    mock = MagicMock()
-    mock.find_element.side_effect = NoSuchElementException()
-    selector = Selector(mock)
-    selection = selector.by_id("value")
-    selection.check_element()
-    log_check_mock.assert_called_with(Contains("present in page"), False, Any())
-
-
-def test_require_element_without_argument(log_check_mock):
-    mock = MagicMock()
-    mock.find_element.return_value = FAKE_WEB_ELEMENT
-    selector = Selector(mock)
-    selection = selector.by_id("value")
-    selection.require_element()
-    log_check_mock.assert_called_with(Contains("present in page"), True, Any())
-
-
-def test_assert_element_without_argument(log_check_mock):
-    mock = MagicMock()
-    mock.find_element.return_value = FAKE_WEB_ELEMENT
-    selector = Selector(mock)
-    selection = selector.by_id("value")
-    selection.assert_element()
-    log_check_mock.assert_not_called()
-
-
 def test_with_must_be_waited_until():
     mock = MagicMock()
     mock.find_element.return_value = FAKE_WEB_ELEMENT

@@ -119,3 +119,23 @@ def is_selected():
     :return: :py:class:`Matcher <lemoncheesecake.matching.matcher.Matcher>` instance
     """
     return StateMatcher("selected", lambda actual: actual.is_selected())
+
+
+class IsInPage(Matcher):
+    def build_description(self, transformation):
+        return transformation("to be present in page")
+
+    def matches(self, _):
+        return MatchResult.success()
+
+
+def is_in_page():
+    """
+    Test if ``WebElement`` is present in page.
+
+    NB: as the matcher is already called with a ``WebElement`` instance,
+    the matcher will always be successful.
+
+    :return: :py:class:`Matcher <lemoncheesecake.matching.matcher.Matcher>` instance
+    """
+    return IsInPage()

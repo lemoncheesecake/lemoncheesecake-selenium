@@ -13,15 +13,8 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, require_that, assert_that, not_
 from lemoncheesecake.matching.matcher import Matcher, MatchResult, MatcherDescriptionTransformer
 
+from lemoncheesecake_selenium.matchers import is_in_page
 from lemoncheesecake_selenium.utils import save_screenshot, save_screenshot_on_exception
-
-
-class IsInPage(Matcher):
-    def build_description(self, transformation):
-        return transformation("to be present in page")
-
-    def matches(self, _):
-        return MatchResult.success()
 
 
 class HasElement(Matcher):
@@ -178,59 +171,56 @@ class Selection:
         with self._exception_handler():
             self.element.send_keys(text)
 
-    def check_element(self, expected: Matcher = None):
+    def check_element(self, expected: Matcher):
         """
         Check that the element matches ``expected`` using
         the :py:func:`lemoncheesecake.matching.check_that` function.
-        If the method is called without argument, the presence of the element is checked.
 
         :param expected: a ``Matcher`` instance whose ``matches`` method will be called with
             the ``WebElement`` that has been found
         """
-        check_that(str(self), self, HasElement(expected or IsInPage()))
+        check_that(str(self), self, HasElement(expected))
 
     def check_no_element(self):
         """
         Check that the element is not present using
         the :py:func:`lemoncheesecake.matching.check_that` function.
         """
-        check_that(str(self), self, not_(HasElement(IsInPage())))
+        check_that(str(self), self, not_(HasElement(is_in_page())))
 
-    def require_element(self, expected: Matcher = None):
+    def require_element(self, expected: Matcher):
         """
         Check that the element matches ``expected`` using
         the :py:func:`lemoncheesecake.matching.require_that` function.
-        If the method is called without argument, the presence of the element is checked.
 
         :param expected: a ``Matcher`` instance whose ``matches`` method will be called with
             the ``WebElement`` that has been found
         """
-        require_that(str(self), self, HasElement(expected or IsInPage()))
+        require_that(str(self), self, HasElement(expected))
 
     def require_no_element(self):
         """
         Check that the element is not present using
         the :py:func:`lemoncheesecake.matching.require_that` function.
         """
-        require_that(str(self), self, not_(HasElement(IsInPage())))
+        require_that(str(self), self, not_(HasElement(is_in_page())))
 
-    def assert_element(self, expected: Matcher = None):
+    def assert_element(self, expected: Matcher):
         """
         Check that the element matches ``expected`` using
         the :py:func:`lemoncheesecake.matching.assert_that` function.
-        If the method is called without argument, the presence of the element is checked.
 
         :param expected: a ``Matcher`` instance whose ``matches`` method will be called with
             the ``WebElement`` that has been found
         """
-        assert_that(str(self), self, HasElement(expected or IsInPage()))
+        assert_that(str(self), self, HasElement(expected))
 
     def assert_no_element(self):
         """
         Check that the element is not present using
         the :py:func:`lemoncheesecake.matching.assert_that` function.
         """
-        assert_that(str(self), self, not_(HasElement(IsInPage())))
+        assert_that(str(self), self, not_(HasElement(is_in_page())))
 
     def save_screenshot(self, description: str = None):
         """

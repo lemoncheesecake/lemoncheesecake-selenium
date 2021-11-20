@@ -4,7 +4,7 @@ import pytest
 from callee import Regex
 from lemoncheesecake.matching.matcher import MatchResult, MatcherDescriptionTransformer
 from lemoncheesecake_selenium import has_text, has_attribute, has_property, \
-    is_displayed, is_enabled, is_selected
+    is_displayed, is_enabled, is_selected, is_in_page
 
 from helpers import MyMatcher
 
@@ -110,3 +110,9 @@ class TestIsSomething:
         mocked_method_name = matcher.__name__
         getattr(mock, mocked_method_name).return_value = expected
         assert bool(matcher().matches(mock)) is expected
+
+
+def test_is_in_page():
+    matcher = is_in_page()
+    assert matcher.build_description(MatcherDescriptionTransformer()) == "to be present in page"
+    assert matcher.matches(None)
