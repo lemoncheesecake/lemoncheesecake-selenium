@@ -5,7 +5,6 @@ from contextlib import contextmanager
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
@@ -82,27 +81,27 @@ class Selection:
         self._expected_condition_reverse = reverse
         return self
 
-    def must_be_waited_until(self, expected_condition: Callable, timeout: int = None, extra_args=()):
+    def must_be_waited_until(self, expected_condition: Callable, *, timeout: int = None, extra_args=()):
         """
         The method can be called to set an explicit wait
         (see https://selenium-python.readthedocs.io/waits.html#explicit-waits) on the underlying element
         so that it is considered available when the ``expected_condition`` is met.
 
-        :param expected_condition: a callable that will take a locator (a tuple of (by, path)) as first argument
-        :param timeout: wait timeout
+        :param expected_condition: a callable that will take a locator (a tuple of ``(by, path)``) as first argument
+        :param timeout: wait timeout (will be :py:attr:`Selection.default_timeout` if no argument is passed)
         :param extra_args: extra arguments to be passed to the ``expected_condition`` callable
         :return: ``self``, meaning this method can be chain called
         """
         return self._must_be_waited(expected_condition, timeout, extra_args, reverse=False)
 
-    def must_be_waited_until_not(self, expected_condition: Callable, timeout: int = None, extra_args=()):
+    def must_be_waited_until_not(self, expected_condition: Callable, *, timeout: int = None, extra_args=()):
         """
         The method can be called to set an explicit wait
         (see https://selenium-python.readthedocs.io/waits.html#explicit-waits) on the underlying element
         so that it is considered available when the ``expected_condition`` is NOT met.
 
-        :param expected_condition: a callable that will take a locator (a tuple of (by, path)) as first argument
-        :param timeout: wait timeout
+        :param expected_condition: a callable that will take a locator (a tuple of ``(by, path)``) as first argument
+        :param timeout: wait timeout (will be :py:attr:`Selection.default_timeout` if no argument is passed)
         :param extra_args: extra arguments to be passed to the ``expected_condition`` callable
         :return: ``self``, meaning this method can be chain called
         """
