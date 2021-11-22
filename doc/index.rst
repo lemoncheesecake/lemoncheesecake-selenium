@@ -8,7 +8,7 @@
 lemoncheesecake-selenium
 ========================
 
-lemoncheesecake-selenium provides logging facilities to `Python selenium library <https://selenium-python.readthedocs.io/>`_
+lemoncheesecake-selenium provides logging facilities to the `Python Selenium library <https://selenium-python.readthedocs.io/>`_
 for tests written with the `lemoncheesecake <http://lemoncheesecake.io>`_ test framework.
 
 Here is a usage example based on the `getting started example <https://selenium-python.readthedocs.io/getting-started.html>`_
@@ -69,14 +69,14 @@ lemoncheesecake-selenium is compatible with Python 3.7-3.10 and Selenium 4.x.
 Introduction
 ------------
 
-The main feature of the library is to provide a layer above selenium's ``WebElement``
+The main feature of the library is to provide a layer above Selenium's ``WebElement``
 that will log the interactions performed on the element (such as clicking, entering text, etc...) and allow various
 checking operations (such as verifying the existence of the element, doing matching operations on the DOM node's text,
 etc...), this is the job of the :py:class:`Selection <lemoncheesecake_selenium.Selection>` class.
 
 :py:class:`Selection <lemoncheesecake_selenium.Selection>` instances are obtained through the
 :py:class:`Selector <lemoncheesecake_selenium.Selector>` class
-which acts like a ``Selection`` factory. A ``Selector`` instance mirrors the selenium's
+which acts like a ``Selection`` factory. A ``Selector`` instance mirrors the Selenium's
 `By <https://selenium-python.readthedocs.io/api.html#locate-elements-by>`_ class such as:
 
 - :py:func:`Selector.by_id <lemoncheesecake_selenium.Selector.by_id>` will build a ``Selection`` using the ``By.ID`` locator strategy
@@ -108,7 +108,8 @@ If anything wrong happens (the ``WebElement`` cannot be found, the requested int
 element, etc..),
 the underlying Selenium's exception will be propagated by the ``Selection`` method that has been called.
 You can choose to automatically take a screenshot of the web page when this is happening by setting the CLASS attribute
-:py:attr:`Selection.screenshot_on_exceptions <lemoncheesecake_selenium.Selection.screenshot_on_exceptions>` to ``True``::
+:py:attr:`Selection.screenshot_on_exceptions <lemoncheesecake_selenium.Selection.screenshot_on_exceptions>` to ``True``
+(meaning that this behavior will be applied to ``Selection`` instances)::
 
    Selection.screenshot_on_exceptions = True
 
@@ -124,9 +125,9 @@ with the methods:
 - :py:func:`assert_element(expected) <lemoncheesecake_selenium.Selection.assert_element>`
 
 where ``expected`` is a :py:class:`Matcher <lemoncheesecake.matching.Matcher>` instance whose ``matches`` method will
-take a ``WebElement`` as argument. lemoncheesecake-selenium provides the following built-in matchers:
+take a ``WebElement`` as argument. lemoncheesecake-selenium provides the following built-in matcher functions:
 
-- :py:func:`is_in_page <lemoncheesecake_selenium.is_in_page>`
+- :py:func:`is_in_page() <lemoncheesecake_selenium.is_in_page>`
 - :py:func:`has_text(expected) <lemoncheesecake_selenium.has_text>`
 - :py:func:`has_attribute(name[, value_matcher]) <lemoncheesecake_selenium.has_attribute>`
 - :py:func:`has_property(name[, value_matcher]) <lemoncheesecake_selenium.has_property>`
@@ -153,9 +154,14 @@ You can also check for the non-existence of an element through the following ``S
 - :py:func:`require_no_element() <lemoncheesecake_selenium.Selection.require_no_element>`
 - :py:func:`assert_no_element() <lemoncheesecake_selenium.Selection.assert_no_element>`
 
-It is possible to automatically take a screenshot on failed checks (either it's done by a ``check_*``, ``require_*``,
-``assert_*``) by setting the CLASS attribute
-:py:attr:`Selection.screenshot_on_failed_checks <lemoncheesecake_selenium.Selection.screenshot_on_failed_checks>` to ``True``::
+Example::
+
+   selection.require_no_element()
+
+It is possible to automatically take a screenshot on failed checks (either it's done by a ``check_*``, ``require_*`` or
+``assert_*`` method) by setting the CLASS attribute
+:py:attr:`Selection.screenshot_on_failed_checks <lemoncheesecake_selenium.Selection.screenshot_on_failed_checks>` to ``True``
+(also meaning that this behavior will be applied to ``Selection`` instances)::
 
    Selection.screenshot_on_failed_checks = True
 
@@ -164,8 +170,8 @@ Explicit waits / Expected condition
 -----------------------------------
 
 lemoncheesecake-selenium provides support for
-`explicit waits / expected condition of Selenium <https://selenium-python.readthedocs.io/waits.html#explicit-waits>`_ with
-the following ``Selection`` methods:
+the `explicit waits / expected condition <https://selenium-python.readthedocs.io/waits.html#explicit-waits>`_
+mechanism of Selenium with the following ``Selection`` methods:
 
 - :py:func:`must_be_waited_until() <lemoncheesecake_selenium.Selection.must_be_waited_until>`
 - :py:func:`must_be_waited_until_not() <lemoncheesecake_selenium.Selection.must_be_waited_until_not>`
@@ -173,7 +179,7 @@ the following ``Selection`` methods:
 Examples::
 
    selection.must_be_waited_until(EC.element_to_be_clickable)
-   selection.must_be_waited_until_not(EC.visibility_of_element_located)
+   selection.must_be_waited_until_not(EC.visibility_of_element_located, timeout=10)
 
 These two methods assume that the expected condition callable passed in argument takes a ``locator`` as first argument.
 
