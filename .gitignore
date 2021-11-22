@@ -9,4 +9,6 @@
 /lemoncheesecake_selenium.egg-info
 /dist
 /suites
+tests/.coverage
+tests/coverage.xml
 
