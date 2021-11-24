@@ -178,10 +178,13 @@ mechanism of Selenium with the following ``Selection`` methods:
 
 Examples::
 
-   selection.must_be_waited_until(EC.element_to_be_clickable)
-   selection.must_be_waited_until_not(EC.visibility_of_element_located, timeout=10)
+   selection = Selector.by_xpath("//button[text()='ok']").\
+      must_be_waited_until(EC.element_to_be_clickable)
+   selection = Selector.by_id("banner").\
+      must_be_waited_until_not(EC.visibility_of_element_located, timeout=10)
 
 These two methods assume that the expected condition callable passed in argument takes a ``locator`` as first argument.
+They both return ``self`` (the ``Selection`` instance) meaning that they can be chained like in the previous example.
 
 Making screenshots
 ------------------
