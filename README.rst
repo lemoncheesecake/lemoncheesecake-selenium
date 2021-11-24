@@ -93,7 +93,6 @@ Documentation
 
 The documentation is available on https://lemoncheesecake-selenium.readthedocs.io.
 
-
 Contact
 -------
 
