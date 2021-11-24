@@ -16,9 +16,11 @@ lemoncheesecake-selenium
 lemoncheesecake-selenium provides logging facilities to the `Selenium Python library <https://selenium-python.readthedocs.io/>`_ for
 tests written with the `lemoncheesecake <http://lemoncheesecake.io>`_ test framework.
 
-Here is a simple example of a search on https://www.python.org ::
+Here is a simple example of a search on https://www.python.org:
 
-   # suites/python_org_search.py
+.. code-block:: python
+
+    # suites/python_org_search.py
 
    import lemoncheesecake.api as lcc
    from lemoncheesecake.matching import *
@@ -42,7 +44,9 @@ Here is a simple example of a search on https://www.python.org ::
        driver.close()
 
 
-We run the test::
+We run the test:
+
+.. code-block:: console
 
    $ lcc.py run
    ============================== python_org_search ==============================
