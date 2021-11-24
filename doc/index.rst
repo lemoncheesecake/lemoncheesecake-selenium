@@ -66,6 +66,9 @@ Install through pip::
 
 lemoncheesecake-selenium is compatible with Python 3.7-3.10 and Selenium 4.x.
 
+You will also need to `install a WebDriver <https://www.selenium.dev/documentation/getting_started/installing_browser_drivers/>`_
+to control your web browser.
+
 Introduction
 ------------
 
