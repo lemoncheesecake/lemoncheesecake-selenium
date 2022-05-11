@@ -28,8 +28,8 @@ of the Selenium Python Binding (unofficial) documentation::
        driver = webdriver.Firefox()
        driver.implicitly_wait(10)
        driver.get("http://www.python.org")
-       selector = Selector(driver)
        check_that("title", driver.title, contains_string("Python"))
+       selector = Selector(driver)
        search_field = selector.by_name("q")
        search_field.clear()
        search_field.set_text("pycon")
@@ -41,7 +41,7 @@ of the Selenium Python Binding (unofficial) documentation::
 
 We run the test::
 
-   $ lcc.py run
+   $ lcc run
    ============================== python_org_search ==============================
     OK  1 # python_org_search.python_org_search
 
@@ -53,7 +53,7 @@ We run the test::
 
    HTML report : file:///tmp/python_org_search/report/report.html
 
-And here are the report details :
+And here is the resulting HTML report:
 
 .. image:: _static/report-sample.png
 
@@ -73,7 +73,7 @@ Introduction
 ------------
 
 The main feature of the library is to provide a layer above Selenium's ``WebElement``
-that will log the interactions performed on the element (such as clicking, entering text, etc...) and allow various
+that will log the interactions performed on elements (such as clicking, entering text, etc...) and allow various
 checking operations (such as verifying the existence of the element, doing matching operations on the DOM node's text,
 etc...), this is the job of the :py:class:`Selection <lemoncheesecake_selenium.Selection>` class.
 
@@ -86,20 +86,28 @@ which acts like a ``Selection`` factory. A ``Selector`` instance mirrors the Sel
 
 - :py:func:`Selector.by_xpath <lemoncheesecake_selenium.Selector.by_xpath>` will build a ``Selection`` using the ``By.XPATH`` locator strategy
 
-- ... and this for every locator strategy of ``By``
+- ... and so on for each locator strategy of ``By``
 
+Obtaining a Selection
+---------------------
+
+As told previously, the ``Selection`` is the main class you'll have to use in lemoncheesecake-selenium to interact with the underlying
+``WebElements``. It can be obtained through the ``Selector`` class::
+
+   selector = Selector(driver)
+   selection = selector.by_id("login")
 
 Interacting with elements
 -------------------------
 
-With :py:class:`Selection <lemoncheesecake_selenium.Selection>` you can
+With the :py:class:`Selection <lemoncheesecake_selenium.Selection>` class you can
 :py:func:`click <lemoncheesecake_selenium.Selection.click>`,
 :py:func:`clear <lemoncheesecake_selenium.Selection.clear>` or
-:py:func:`set_text <lemoncheesecake_selenium.Selection.set_text>` (equivalent of Selenium's ``send_keys``) the element::
+:py:func:`set_text <lemoncheesecake_selenium.Selection.set_text>` (the equivalent of Selenium's ``send_keys``) the element::
 
    selection.set_text("hello")
 
-You can also directly interact with a SELECT element, using the same ``select_*`` and ``deselect_*`` methods as the
+You can also directly interact with a ``<select>`` element, using the same ``select_*`` and ``deselect_*`` methods as the
 Selenium's
 :py:class:`Select <selenium.webdriver.support.select.Select>` class with methods such as
 :py:func:`select_by_value <lemoncheesecake_selenium.Selection.select_by_value>`,
@@ -108,26 +116,26 @@ Selenium's
    selection.select_by_index(2)
 
 If anything wrong happens (the ``WebElement`` cannot be found, the requested interaction is not possible on that
-element, etc..),
-the underlying Selenium's exception will be propagated by the ``Selection`` method that has been called.
-You can choose to automatically take a screenshot of the web page when this is happening by setting the CLASS attribute
+element, etc..), the underlying Selenium's exception will be propagated.
+You can choose to automatically take a screenshot of the web page when this is happening by setting the **class** attribute
 :py:attr:`Selection.screenshot_on_exceptions <lemoncheesecake_selenium.Selection.screenshot_on_exceptions>` to ``True``
-(meaning that this behavior will be applied to ``Selection`` instances)::
+(meaning that this behavior will be applied to all ``Selection`` instances)::
 
    Selection.screenshot_on_exceptions = True
 
 Checking elements
 -----------------
 
-The :py:class:`Selection <lemoncheesecake_selenium.Selection>` allows you to do checks on the underlying element using
-`the same check/require/assert scheme as lemoncheesecake <http://docs.lemoncheesecake.io/en/latest/matchers.html#the-matching-operations>`_
+The :py:class:`Selection <lemoncheesecake_selenium.Selection>` class allows you to do checks on the underlying element using
+`the same check/require/assert logic of lemoncheesecake <http://docs.lemoncheesecake.io/en/latest/matchers.html#the-matching-operations>`_
 with the methods:
 
 - :py:func:`check_element(expected) <lemoncheesecake_selenium.Selection.check_element>`
 - :py:func:`require_element(expected) <lemoncheesecake_selenium.Selection.require_element>`
 - :py:func:`assert_element(expected) <lemoncheesecake_selenium.Selection.assert_element>`
 
-where ``expected`` is a :py:class:`Matcher <lemoncheesecake.matching.Matcher>` instance whose ``matches`` method will
+where ``expected`` is a :py:class:`Matcher <lemoncheesecake.matching.matcher.Matcher>` instance whose
+:py:func:`matches <lemoncheesecake.matching.matcher.Matcher.build_description>` method will
 take a ``WebElement`` as argument. lemoncheesecake-selenium provides the following built-in matcher functions:
 
 - :py:func:`is_in_page() <lemoncheesecake_selenium.is_in_page>`
@@ -143,7 +151,7 @@ Examples::
    selection.check_element(is_in_page())
    selection.check_element(has_text(match_pattern(r"(\d)€")))
    selection.check_element(has_attribute("class"))
-   selection.check_element(has_attribute("class", equal_to("enabled)))
+   selection.check_element(has_attribute("class", equal_to("enabled")))
    selection.check_element(has_property("text_length"))
    selection.check_element(has_property("text_length", equal_to(8)))
    selection.check_element(is_displayed())
@@ -151,7 +159,8 @@ Examples::
    selection.check_element(not_(is_enabled()))
    selection.check_element(is_selected())
 
-You can also check for the non-existence of an element through the following ``Selection`` methods:
+As these methods look for a ``WebElement`` before calling the matcher on it,
+you can check for the non-existence of an element through the following ``Selection`` methods:
 
 - :py:func:`check_no_element() <lemoncheesecake_selenium.Selection.check_no_element>`
 - :py:func:`require_no_element() <lemoncheesecake_selenium.Selection.require_no_element>`
@@ -162,9 +171,9 @@ Example::
    selection.require_no_element()
 
 It is possible to automatically take a screenshot on failed checks (either it's done by a ``check_*``, ``require_*`` or
-``assert_*`` method) by setting the CLASS attribute
+``assert_*`` method) by setting the **class** attribute
 :py:attr:`Selection.screenshot_on_failed_checks <lemoncheesecake_selenium.Selection.screenshot_on_failed_checks>` to ``True``
-(also meaning that this behavior will be applied to ``Selection`` instances)::
+(also meaning that this behavior will be applied to all ``Selection`` instances)::
 
    Selection.screenshot_on_failed_checks = True
 
@@ -214,7 +223,7 @@ Page Object Model (POM)
 While lemoncheesecake-selenium does not enforce any design pattern, it plays pretty well with the
 `Page Object Model (POM) <https://www.browserstack.com/guide/page-object-model-in-selenium>`_ design pattern.
 
-Here is how the initial example could be rewritten using this design pattern::
+Here is how the initial example could be rewritten using this pattern::
 
    # suites/python_org_search_pom.py
 
