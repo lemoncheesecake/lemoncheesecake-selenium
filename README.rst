@@ -33,8 +33,8 @@ Here is a simple example of a search on https://www.python.org:
        driver = webdriver.Firefox()
        driver.implicitly_wait(10)
        driver.get("http://www.python.org")
-       selector = Selector(driver)
        check_that("title", driver.title, contains_string("Python"))
+       selector = Selector(driver)
        search_field = selector.by_name("q")
        search_field.clear()
        search_field.set_text("pycon")
@@ -48,7 +48,7 @@ We run the test:
 
 .. code-block:: console
 
-   $ lcc.py run
+   $ lcc run
    ============================== python_org_search ==============================
     OK  1 # python_org_search.python_org_search
 
@@ -82,7 +82,7 @@ to control your web browser.
 Features
 --------
 
-- clicking, setting text, selecting element in a SELECT, etc..
+- clicking, setting text, selecting element in a ``<select>``, etc..
 
 - checking DOM nodes
 
